@@ -37,7 +37,7 @@ test_images_filenames = images[train_count + val_count:]
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-model = torch.load('/content/drive/MyDrive/Beesearch/Model Scripts/Hair Best Pipeline/model_98.pth')
+model = torch.load(root + 'models/model_98.pth')
 
 params = {
     "device": device,

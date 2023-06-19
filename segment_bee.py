@@ -34,7 +34,7 @@ test_images_filenames = images[train_count + val_count:]
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-model = torch.load('/content/drive/MyDrive/Beesearch/Models/Bee(no eyes_wings)/Model_300').to(device)
+model = torch.load(root + 'models/Model_300').to(device)
 
 params = {
     "device": device,
