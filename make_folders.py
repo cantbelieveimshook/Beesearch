@@ -1,6 +1,16 @@
+'''
+Name: Kathryn Chen
+Date: June 23, 2023
+'''
+
 from paths import *
 
-# run this file first to make the necessary folders, then fill the original_bee_masks_directory and bee_images_directory with the necessary images
+'''
+Run this file first to make the necessary folders,
+then fill the original_bee_masks and bee_original
+directories with the necessary images.
+'''
+
 folders = [original_bee_masks_directory,
            background_bees_directory,
            bee_images_directory,

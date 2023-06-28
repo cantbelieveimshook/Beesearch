@@ -1,3 +1,8 @@
+'''
+Name: Kathryn Chen
+Date: June 23, 2023
+'''
+
 import os
 import torch
 from functions import make_fake_bees

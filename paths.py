@@ -1,3 +1,8 @@
+'''
+Name: Kathryn Chen
+Date: June 23, 2023
+'''
+
 import os
 
 root = os.getcwd()
@@ -42,8 +47,14 @@ vertical_mask_dir = aug_mask_dir + 'vertical_shifts/'
 zoom_im_dir = aug_im_dir + 'zoom/'
 zoom_mask_dir = aug_mask_dir + 'zoom/'
 
-# Make sure the images and masks directories for these augmentations actually exist. Otherwise, keep everything in the masterlist as is.
-# Then, comment/uncomment the augmentations based on which augmentations you want to add to your dataset. I would always recommend keeping the original images and masks directories.
+'''
+Make sure the images and masks directories for these augmentations actually exist.
+Otherwise, keep everything in the master list as is.
+If you want to use certain augmentations but not others, comment/uncomment the lines 
+based on which augmentations you want to add to your dataset.
+I would always recommend keeping the original images and masks directories.
+'''
+
 masterlist = [(background_bees_directory, root + 'whole_bee_mask/'),
  # (blur_im_dir, blur_mask_dir),
   # (bright_im_dir, bright_mask_dir),

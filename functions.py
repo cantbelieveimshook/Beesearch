@@ -1,3 +1,8 @@
+'''
+Name: Kathryn Chen
+Date: June 23, 2023
+'''
+
 import math
 import os
 import cv2
@@ -12,6 +17,13 @@ from paths import *
 from carvekit.web.schemas.config import MLConfig
 from carvekit.web.utils.init_utils import init_interface
 
+'''
+This file contains most of the functions that are used in this repository.
+The functions that make the augmented images are located in make_augment_functions.py
+'''
+
+# Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
+# from the original bee images, then saves these modified images in a new folder.
 def make_fake_bees(images_path, masks_path, masks, save_path):
   for i in masks:
     im = plt.imread(images_path + i)
@@ -24,6 +36,9 @@ def make_fake_bees(images_path, masks_path, masks, save_path):
     bee_reborn = cv2.cvtColor(fake_bee, cv2.COLOR_BGR2RGB)
     cv2.imwrite(save_path + i, bee_reborn)
 
+
+# Converts the transparent pixels in the bees with artificially removed backgrounds
+# into black pixels, which are brings the images closer to what the model was pre-trained on.
 def convert_to_black(image, pixel=130):
   for i in range(len(image)):
     for j in range(len(image[i])):
@@ -33,18 +48,22 @@ def convert_to_black(image, pixel=130):
     i += 1
   return image
 
-def make_augs(filenames, augs):
+
+# Creates a concatenated Pytorch Dataset of augmented values.
+def make_augs(filenames, augs, image_transform, mask_transform):
   masterlist = []
   for x, y in augs:
-    dset = BeeInferenceDataset(filenames, x, y, image_transform=image_transform, mask_transform = mask_transform)
+    dset = BeeInferenceDataset(filenames, x, y, image_transform = image_transform, mask_transform = mask_transform)
     masterlist.append(dset)
   datasets = torch.utils.data.ConcatDataset(masterlist)
   return datasets
 
-def train_one_epoch(model, loss_fn):
+
+# Trains one epoch of a supervised segmentation model using the typical Pytorch training loop.
+# Original code found here: https://pytorch.org/tutorials/beginner/introyt/trainingyt.html
+def train_one_epoch(model, loss_fn, train_dataloader, optimizer, device, batch_size, train_images):
     running_loss = 0
-    last_loss = 0
-    batches = math.ceil(len(train_images_filenames) / params['batch_size'])
+    batches = math.ceil(len(train_images) / batch_size)
 
     for i, data in enumerate(train_dataloader):
       inputs, labels = data
@@ -64,31 +83,30 @@ def train_one_epoch(model, loss_fn):
 
     return last_loss
 
-def train(model, epochs=20):
+
+# Trains a supervised segmentation model.
+# Original code found here: https://pytorch.org/tutorials/beginner/introyt/trainingyt.html
+def train(model, batch_size, loss_fn, train_dataloader, val_dataloader, scheduler, optimizer, device, train_images, epochs=20):
   epoch_number = 0
   for epoch in range(epochs):
     print('EPOCH {}:'.format(epoch_number + 1))
 
     # Make sure gradient tracking is on, and do a pass over the data
     model.train(True)
-    avg_loss = train_one_epoch()
+    avg_loss = train_one_epoch(model, loss_fn, train_dataloader, optimizer, device, batch_size, train_images)
 
-    # We don't need gradients on to do reporting
     model.eval()
 
     running_vloss = 0.0
 
     with torch.no_grad():
-      # batch = 0
       for i, vdata in enumerate(val_dataloader):
-        # print(i)
         vinputs, vlabels = vdata
         vinputs, vlabels = vinputs.to(device), vlabels.to(device)
         voutputs = model(vinputs)
         voutputs = torch.sigmoid(voutputs)
         vloss = loss_fn(voutputs, vlabels)
         running_vloss += vloss
-        # batch += 1
 
     scheduler.step(running_vloss)
 
@@ -97,6 +115,9 @@ def train(model, epochs=20):
 
     epoch_number += 1
 
+
+# Predicts the images of a test dataset using a model. Zips the original image height and width along
+# with the predicted crop, then adds that to a list of predictions that is returned at the end.
 def predict(model, params, test_dataset, batch_size):
   test_loader = DataLoader(
     test_dataset, batch_size=batch_size, shuffle=False, num_workers=params["num_workers"], pin_memory=True,
@@ -119,7 +140,14 @@ def predict(model, params, test_dataset, batch_size):
         i += 1
   return predictions
 
-def predict_crops(model, params, test_dataset, test_loader):
+
+'''
+Only used if the hair segmentation process is done by cropping and restitching the images.
+Predicts the images of a test dataset by cropping those images and segmenting the crops,
+then re-appending those crops into a nested list in a way that allows the predicted crops
+to be reconstructed into the original image.
+'''
+def predict_crops(model, params, test_loader):
   model.eval()
   predictions = []
   with torch.no_grad():
@@ -141,6 +169,9 @@ def predict_crops(model, params, test_dataset, test_loader):
 
   return predictions
 
+
+# Used to resize the predicted images back to their original sizes.
+# If save = True, it also saves the predicted images to the designated save path.
 def resize_predictions(predictions, test_dataset, save=True, save_path=root + 'predicted_bee_masks/'):
   i = 0
   predicted_masks = []
@@ -156,9 +187,13 @@ def resize_predictions(predictions, test_dataset, save=True, save_path=root + 'p
 
   return predicted_masks
 
-
+'''
+Only used if the hair segmentation process is done by cropping and restitching the images.
+Takes a nested list of predicted crops and restitches them back into a full mask of the original image.
+# If save = True, it also saves the restitched predicted images to the designated save path.
+'''
 def restitch_predictions(predictions, test_dataset, save=True,
-                         save_path=root + 'full_segmentation_pipeline/' + 'predicted_hair_masks/'):
+                         save_path=root + 'predicted_hair_masks/'):
   restitched_images = []
   idx = 0
   for image in predictions:
@@ -189,8 +224,13 @@ def restitch_predictions(predictions, test_dataset, save=True,
 
   return restitched_images
 
-def display_image_grid(images_filenames, images_directory, masks_directory,
-                       predicted_masks=None, save = False, filetype='.png'):
+
+'''Used to display the original image, original mask, and predicted mask in a grid.
+Ideally is used to display ten sets of images/masks.
+If save = True, this image grid will be saved to the save_path.
+'''
+def display_image_grid(images_filenames, images_directory, masks_directory, predicted_masks=None,
+                       save = False, save_path = 'whole_bee_predictions', filetype='.png'):
   cols = 3 if predicted_masks else 2
   rows = len(images_filenames)
   figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24))
@@ -219,13 +259,20 @@ def display_image_grid(images_filenames, images_directory, masks_directory,
   plt.tight_layout()
   if save:
     root = os.getcwd()
-    filename = os.path.join(root, 'whole_bee_predictions')
+    filename = os.path.join(root, save_path)
     plt.savefig(filename + filetype, bbox_inches='tight')
     plt.close(figure)
   else:
     plt.show()
 
-def display_bees(images_filenames, images_directory, predicted_masks):
+
+'''Same as display_image_grid, but does not display the ground truth masks.
+Use this function if you don't have ground truth masks.
+Ideally is used to display ten sets of images/masks.
+If save = True, this image grid will be saved to the save_path.
+'''
+def display_bees(images_filenames, images_directory, predicted_masks,
+                 save = False, save_path = 'whole_bee_predictions', filetype = '.png'):
   cols = 2
   rows = len(images_filenames)
   figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24))
@@ -243,10 +290,17 @@ def display_bees(images_filenames, images_directory, predicted_masks):
     ax[i, 1].set_axis_off()
 
   plt.tight_layout()
-  # plt.savefig(filename + filetype, bbox_inches='tight')
-  # plt.close(figure)
-  plt.show()
+  if save:
+    root = os.getcwd()
+    filename = os.path.join(root, save_path)
+    plt.savefig(filename + filetype, bbox_inches='tight')
+    plt.close(figure)
+  else:
+    plt.show()
 
+
+# For each predicted mask, counts the number of predicted bee pixels and the percentage
+# those pixels comprise the total image, then saves both values of each image into a csv.
 def count_surface_area(masks, dataset, path):
   df = pd.DataFrame(columns=['name', 'surface area', 'percentage of pixels'])
   for i in range(len(masks)):
@@ -262,19 +316,25 @@ def count_surface_area(masks, dataset, path):
       df.loc[len(df)] = [name, bee_pixels, percentage]
   df.to_csv(path, index=False)
 
+
+# Calculates the jaccard (intersection over union) value.
 def jaccard(y_true, y_pred):
   intersection = (y_true * y_pred).sum()
   union = y_true.sum() + y_pred.sum() - intersection
   return (intersection + 1e-15) / (union + 1e-15)
 
 
+# Calculates the dice coefficient.
 def dice(y_true, y_pred):
   return (2 * (y_true * y_pred).sum() + 1e-15) / (y_true.sum() + y_pred.sum() + 1e-15)
 
 
+# Calculates the raw accuracy score of accurate pixels divided by the total pixels.
 def accuracy(y_true, y_pred):
   return (((y_pred + y_true) == 2).sum() + ((y_pred + y_true) == 0).sum()) / y_true.size
 
+
+# Calculates the accuracy, dice, and IoU values, then saves them to a csv file.
 def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
   results = pd.DataFrame(columns=['Name', 'Accuracy', 'F1', 'IoU'])
 
@@ -293,6 +353,11 @@ def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
     results = pd.concat([results, pd.DataFrame(data=sample, index=[mask])])
   results.to_csv(csv_path, index = False)
 
+'''
+This is a modified version of the background removal function.
+The original function can be found in the background_removal_helper.py file of this github:
+https://github.com/Schachte/Background-Removal-Utility/blob/master/background_removal_helper.py
+'''
 def background_removal_updated(input_dir, output_dir, input_extension=".png", to_remove=to_remove):
   SEGMENTATION_NETWORK = "tracer_b7"
   PREPROCESSING_METHOD = "stub"
