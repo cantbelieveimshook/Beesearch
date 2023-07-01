@@ -39,15 +39,19 @@ def make_fake_bees(images_path, masks_path, masks, save_path):
 
 # Converts the transparent pixels in the bees with artificially removed backgrounds
 # into black pixels, which are brings the images closer to what the model was pre-trained on.
-def convert_to_black(image, pixel=130):
+def convert_to_black(image, pixel=130, degree=0.05):
+  image = np.array(image)[:, :, :3]
+  lower = pixel - pixel * degree
+  upper = pixel + pixel * degree
   for i in range(len(image)):
     for j in range(len(image[i])):
-      if (image[i][j] == pixel).all():
+      if all(lower <= k <= upper for k in image[i][j]):
         image[i][j] = [0, 0, 0]
       j += 1
     i += 1
-  return image
 
+  image = Image.fromarray(np.uint8(image))
+  return image
 
 # Creates a concatenated Pytorch Dataset of augmented values.
 def make_augs(filenames, augs, image_transform, mask_transform):
@@ -358,7 +362,7 @@ This is a modified version of the background removal function.
 The original function can be found in the background_removal_helper.py file of this github:
 https://github.com/Schachte/Background-Removal-Utility/blob/master/background_removal_helper.py
 '''
-def background_removal_updated(input_dir, output_dir, input_extension=".png", to_remove=to_remove):
+def background_removal_updated(input_dir, output_dir, to_remove):
   SEGMENTATION_NETWORK = "tracer_b7"
   PREPROCESSING_METHOD = "stub"
   POSTPROCESSING_METHOD = "fba"
@@ -383,21 +387,18 @@ def background_removal_updated(input_dir, output_dir, input_extension=".png", to
 
   os.makedirs(output_dir, exist_ok=True)
   for file_name in to_remove:
-    if file_name.endswith(input_extension):
-      image_path = os.path.join(input_dir, file_name)
-      image = Image.open(image_path)
+    image_path = os.path.join(input_dir, file_name)
+    image = Image.open(image_path)
 
-      if image.mode != "RGB":
-        image = image.convert("RGB")
+    if image.mode != "RGB":
+      image = image.convert("RGB")
 
-      print(f"Beginning removal on {file_name}...")
+    print(f"Beginning removal on {file_name}...")
 
-      result = interface([image])
-      result = convert_to_black(result)
-      result_file_name = file_name.replace(input_extension, '.png')
-      result_path = os.path.join(output_dir, result_file_name)
-      result[0].save(result_path)
-      new_path = result_path.replace('.png', '.jpg')
-      os.rename(result_path, new_path)
+    result = interface([image])
+    result = convert_to_black(result[0])
+    result_path = os.path.join(output_dir, file_name)
+    result.save(result_path)
 
-      print(f"Saved {file_name} to {new_path}")
+    print(f"Saved {file_name} to {result_path}")
+
