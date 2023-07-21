@@ -15,3 +15,12 @@ def artificial_bees_main():
     masks = os.listdir(bee_masks_directory)
 
     make_fake_bees(background_bees_directory, bee_masks_directory, masks, artificial_bees_directory)
+
+def artificial_hair_main():
+    root = os.getcwd()
+    background_bees_directory = os.path.join(root, 'artificial_bees')
+    bee_masks_directory = os.path.join(root, 'predicted_hair_masks')
+    artificial_hair_directory = os.path.join(root, 'segmented_hair_final')
+    masks = os.listdir(bee_masks_directory)
+
+    make_fake_bees(background_bees_directory, bee_masks_directory, masks, artificial_hair_directory)

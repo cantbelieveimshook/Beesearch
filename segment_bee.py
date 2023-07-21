@@ -15,20 +15,23 @@ from paths import *
 from classes import BeeInferenceDataset
 from functions import make_augs, train, predict, resize_predictions, display_image_grid, display_bees, count_surface_area, calculate_accuracy
 
-# to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
-# Only set to True if you have a set of images and corresponding masks for the model to train on.
-def segment_bee_main(background_removed = False, to_train = False):
+'''
+to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
+Only set to True if you have a set of images and corresponding masks for the model to train on.
+Set the seed for not reproducibility.
+'''
+def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     root = os.getcwd()
     if background_removed:
         images_directory = os.path.join(root, 'removed_background_bees')
     else:
         images_directory = os.path.join(root, 'bee_original')
-    masks_directory = root + 'whole_bee_mask/'
+    masks_directory = os.path.join(root, 'whole_bee_mask/')
     images = os.listdir(images_directory)
     masks = os.listdir(masks_directory)
 
     # shuffle images to increase likelihood of balanced train, val, and test datasets
-    random.shuffle(images)
+    random.Random(seed).shuffle(images)
 
     train_count = int(0.6 * len(images))
     test_count = int(0.2 * len(images))
@@ -93,6 +96,9 @@ def segment_bee_main(background_removed = False, to_train = False):
         display_image_grid(test_images_filenames[:10], images_directory, masks_directory, predicted_masks=predicted_masks[:10])
 
     # If you want the surface area and accuracy metrics
-    count_surface_area(predicted_masks, test_dataset, path=root + 'bee_surface_areas.csv')
+    surface_area_csv = os.path.join(root, 'bee_surface_areas.csv')
+    prediction_accuracy_csv = os.path.join(root, 'bee_prediction_accuracies.csv')
+
+    count_surface_area(predicted_masks, test_dataset, path = surface_area_csv)
     calculate_accuracy(predicted_masks, masks_directory = masks_directory, filenames = test_images_filenames,
-                           csv_path = root + 'bee_prediction_accuracies.csv')
+                           csv_path = prediction_accuracy_csv)

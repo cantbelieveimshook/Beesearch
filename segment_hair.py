@@ -19,8 +19,9 @@ to_crop determines if the images will be cropped before being segmented, then re
 I would generally not recommend you set to_crop to False, as the model is pre-trained on image crops of 256 x 256 pixels.
 to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
 Only set to True if you have a set of images and corresponding masks for the model to train on.
+Set the seed for not reproducibility.
 '''
-def segment_hair_main(to_crop = True, to_train = False):
+def segment_hair_main(to_crop = True, to_train = False, seed = 0):
     root = os.getcwd()
     images_directory = os.path.join(root, 'artificial_bees/')
     masks_directory = root + 'original_hair_masks/'
@@ -28,7 +29,7 @@ def segment_hair_main(to_crop = True, to_train = False):
     masks = os.listdir(masks_directory)
 
     # shuffle images to increase likelihood of balanced train, val, and test datasets
-    random.shuffle(images)
+    random.Random(seed).shuffle(images)
 
     train_count = int(0.6 * len(images))
     test_count = int(0.2 * len(images))
@@ -121,7 +122,10 @@ def segment_hair_main(to_crop = True, to_train = False):
             display_image_grid(artificial_bees[:10], artificial_bees_directory, masks_directory, predicted_masks = predicted_masks[:10],
                                save_path = 'hair_predictions')
         # If you want the surface area and accuracy metrics
-        count_surface_area(predicted_masks, test_dataset, path=root + 'hair_surface_areas.csv')
+        surface_area_csv = os.path.join(root, 'hair_surface_areas.csv')
+        prediction_accuracy_csv = os.path.join(root, 'hair_prediction_accuracies.csv')
+
+        count_surface_area(predicted_masks, test_dataset, path = surface_area_csv)
         calculate_accuracy(predicted_masks, masks_directory=masks_directory, filenames=test_images_filenames,
-                           csv_path=root + 'hair_prediction_accuracies.csv')
+                           csv_path = prediction_accuracy_csv)
 
