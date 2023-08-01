@@ -8,10 +8,10 @@ import os
 import sys
 from remove_background import remove_background_main
 from segment_bee import segment_bee_main
-from artificial_bees import artificial_bees_main
+from artificial_bees import artificial_bees_main, artificial_hair_main
 from segment_hair import segment_hair_main
 from entropy_analysis import entropy_analysis
-from image_regression import image_regression, predicted_rating_entropy_values, predicted_rating_entropy_surfacec_area
+from image_regression import image_regression, predicted_rating_entropy_values
 
 
 remove_background = False
@@ -25,7 +25,7 @@ if remove_background:
 segment_bee_main(background_removed = remove_background, to_train = False)
 artificial_bees_main()
 segment_hair_main(to_crop = True, to_train = False)
-
+artificial_hair_main()
 
 
 root = os.getcwd()
