@@ -11,7 +11,7 @@ from segment_bee import segment_bee_main
 from artificial_bees import artificial_bees_main, artificial_hair_main
 from segment_hair import segment_hair_main
 from entropy_analysis import entropy_analysis
-from image_regression import image_regression, predicted_rating_entropy_values
+from image_regression import image_regression, predicted_rating_entropy_values, predicted_rating_entropy_surface_area
 
 
 remove_background = False
@@ -47,6 +47,6 @@ entropy_analysis(image_folder_path, entropy_output_path, entropy_values)
 # Image regression
 image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
 predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating)
-predicted_rating_entropy_surfacec_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area)
+predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area)
 
 
