@@ -42,7 +42,7 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = torch.load(root + 'models/Model_300').to(device)
+    model = torch.load(root + 'models/New_Bee_Model').to(device)
 
     params = {
         "device": device,
