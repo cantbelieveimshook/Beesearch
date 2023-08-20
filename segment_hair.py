@@ -50,6 +50,15 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
         "epochs": 10,
     }
 
+    # For the test loader and prediction functions specifically.
+    test_params = {
+        "device": device,
+        "lr": 0.001,
+        "batch_size": 16,
+        "num_workers": 4,
+        "epochs": 10,
+    }
+
     # The transformations done on the image dataset before training and prediction.
     image_transform = A.Compose(
         [A.Resize(256, 256), A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), ToTensorV2()]
@@ -64,9 +73,6 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
     optimizer = optim.Adam(model.parameters(), lr = params['lr'], weight_decay=1e-5)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 4)
 
-    # Creates a Pytorch dataset of the test images.
-    test_dataset = BeeInferenceDataset(test_images_filenames, images_directory, masks_directory, image_transform=image_transform, mask_transform = mask_transform)
-
     if to_train:
         # Creates Pytorch datasets of the training and validation images.
         train_dataset = BeeInferenceDataset(train_images_filenames, images_directory, masks_directory,
@@ -74,20 +80,21 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
         val_dataset = BeeInferenceDataset(val_images_filenames, images_directory, masks_directory,
                                           image_transform=image_transform, mask_transform=mask_transform)
 
-        train_dataloader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True)
-        val_dataloader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False)
+        train_dataloader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True, pin_memory=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False, )
 
         train(model = model, batch_size = params['batch_size'], loss_fn = loss_fn,
               train_dataloader = train_dataloader, val_dataloader = val_dataloader,
               scheduler = scheduler, optimizer = optimizer, device = device, train_images = images, epochs = 15)
 
     if to_crop:
+        # Creates a Pytorch dataset of the test images after dividing them into crops.
         bee_dataset = CroppedDataset(artificial_bees[:16], artificial_bees_directory, image_transform=image_transform)
-        test_loader = DataLoader(bee_dataset, batch_size=16, shuffle=False, collate_fn=bee_dataset.collate_fn,
+        test_loader = DataLoader(bee_dataset, batch_size=test_params['batch_size'], shuffle=False, collate_fn=bee_dataset.collate_fn,
                                  num_workers=params["num_workers"], pin_memory=True)
 
         # Crops the input images, segments the bee hair in the crops, then restitches the crops back into the original image.
-        restitched_predictions = predict_crops(model, params, bee_dataset, test_loader)
+        restitched_predictions = predict_crops(model, params, test_loader)
 
         # Resizes the 256 x 256 segmentations to their original size.
         restitched_predicted_masks = restitch_predictions(restitched_predictions, bee_dataset)
@@ -100,20 +107,23 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
                                save_path = 'hair_predictions')
 
         # If you want the surface area and accuracy metrics
-        count_surface_area(restitched_predicted_masks, test_dataset, path=root + 'hair_surface_areas.csv')
+        count_surface_area(restitched_predicted_masks, bee_dataset, path=root + 'hair_surface_areas.csv')
         calculate_accuracy(restitched_predicted_masks, masks_directory=masks_directory, filenames=test_images_filenames,
                            csv_path=root + 'hair_prediction_accuracies.csv')
 
     # to_crop = False
     else:
+        # Creates a Pytorch dataset of the test images without dividing them into crops.
         test_dataset = BeeInferenceDataset(test_images_filenames, images_directory, masks_directory,
                                            image_transform=image_transform, mask_transform=mask_transform)
+        test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False,
+                                 num_workers=params["num_workers"], pin_memory=True)
 
         # Outputs the model's predicted segmentations of bee hair.
-        predictions = predict(model, params, test_dataset, batch_size=16)
+        predictions = predict(model, params, test_dataset, test_loader)
 
         # Resizes the 256 x 256 segmentations to their original size.
-        predicted_masks = resize_predictions(predictions)
+        predicted_masks = resize_predictions(predictions, test_dataset)
 
         # Slightly different grids are displayed based on whether there exist ground truth masks.
         if len(masks) == 0:

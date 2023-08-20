@@ -4,10 +4,10 @@ Name: Luning Ding
 Date: June 23, 2023
 '''
 
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
 from classes import *
 from paths import *
+from torch.utils.data import Dataset, DataLoader
+from PIL import Image
 from carvekit.web.schemas.config import MLConfig
 from carvekit.web.utils.init_utils import init_interface
 import copy
@@ -136,17 +136,24 @@ def train(model, batch_size, loss_fn, train_dataloader, val_dataloader, schedule
     epoch_number += 1
 
 
-# Predicts the images of a test dataset using a model. Zips the original image height and width along
-# with the predicted crop, then adds that to a list of predictions that is returned at the end.
-def predict(model, params, test_dataset, batch_size):
-  test_loader = DataLoader(
-    test_dataset, batch_size=batch_size, shuffle=False, num_workers=params["num_workers"], pin_memory=True,
-  )
+'''
+Predicts the images of a test dataset using a model.
+Zips the original image height and width along with the predicted crop, 
+then adds that to a list of predictions that is returned at the end.
+'''
+def predict(model, params, dataset, dataloader = None):
+  if dataloader == None:
+    dataloader = DataLoader(dataset,
+                            batch_size=params["batch_size"],
+                            shuffle=False,
+                            num_workers=params["num_workers"],
+                            pin_memory=True)
+
   model.eval()
   predictions = []
   with torch.no_grad():
     i = 0
-    for images, _ in test_loader:
+    for images, _ in dataloader:
       images = images.to(params["device"], non_blocking=True)
       output = model(images)
       probabilities = torch.sigmoid(output.squeeze(1))
@@ -155,7 +162,7 @@ def predict(model, params, test_dataset, batch_size):
       for predicted_mask in zip(
               predicted_masks
       ):
-        original_heights, original_widths = test_dataset.getsize(i)
+        original_heights, original_widths = dataset.getsize(i)
         predictions.append((predicted_mask, original_heights, original_widths))
         i += 1
   return predictions
@@ -167,11 +174,11 @@ Predicts the images of a test dataset by cropping those images and segmenting th
 then re-appending those crops into a nested list in a way that allows the predicted crops
 to be reconstructed into the original image.
 '''
-def predict_crops(model, params, test_loader):
+def predict_crops(model, params, dataloader):
   model.eval()
   predictions = []
   with torch.no_grad():
-    for crops in test_loader:  # change to for crops, _ in test_loader if the test_loader has masks
+    for crops in dataloader:  # change to for crops, _ in test_loader if the test_loader has masks
       for i in crops:  # if batch_size is 1, this is the one crop list in the batch
         predicted_crops = []
         for j in i:  # one row in the crop list
@@ -192,7 +199,7 @@ def predict_crops(model, params, test_loader):
 
 # Used to resize the predicted images back to their original sizes.
 # If save = True, it also saves the predicted images to the designated save path.
-def resize_predictions(predictions, test_dataset, save=True, save_path=root + 'predicted_bee_masks/'):
+def resize_predictions(predictions, dataset, save=True, save_path=root + 'predicted_bee_masks/'):
   i = 0
   predicted_masks = []
   for predicted_256x256_mask, original_height, original_width in predictions:
@@ -200,7 +207,7 @@ def resize_predictions(predictions, test_dataset, save=True, save_path=root + 'p
     full_sized_mask = cv2.resize(mask, (original_width, original_height), interpolation=cv2.INTER_NEAREST)
     predicted_masks.append(full_sized_mask)
     if save:
-      name = test_dataset.getname(i)
+      name = dataset.getname(i)
       save_name = save_path + name
       cv2.imwrite(save_name, full_sized_mask)
     i += 1
@@ -246,36 +253,39 @@ def restitch_predictions(predictions, test_dataset, save=True,
 
 
 '''Used to display the original image, original mask, and predicted mask in a grid.
+Displays two columns if no ground truth masks.
+Otherwise displays three: one for original images, one for ground truth masks, one for predicted masks.
 Ideally is used to display ten sets of images/masks.
 If save = True, this image grid will be saved to the save_path.
 '''
-def display_image_grid(images_filenames, images_directory, masks_directory, predicted_masks=None,
+def display_image_grid(images_filenames, images_directory, masks_directory = None, predicted_masks=None,
                        save = False, save_path = 'whole_bee_predictions', filetype='.png'):
-  cols = 3 if predicted_masks else 2
+  cols = 3 if masks_directory else 2
   rows = len(images_filenames)
   figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24))
   for i, image_filename in enumerate(images_filenames):
     image = cv2.imread(os.path.join(images_directory, image_filename))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    mask = cv2.imread(os.path.join(masks_directory, image_filename))
-    mask = preprocess_mask(mask)
-    mask = mask[:, :, 0]
-
     ax[i, 0].imshow(image)
-    ax[i, 1].imshow(mask, interpolation="nearest")
-
     ax[i, 0].set_title("Image")
-    ax[i, 1].set_title("Ground truth mask")
-
     ax[i, 0].set_axis_off()
-    ax[i, 1].set_axis_off()
+
+    if masks_directory:
+      mask = cv2.imread(os.path.join(masks_directory, image_filename))
+      mask = preprocess_mask(mask)
+      mask = mask[:, :, 0]
+
+      ax[i, 1].imshow(mask, interpolation="nearest")
+
+      ax[i, 1].set_title("Ground truth mask")
+
+      ax[i, 1].set_axis_off()
 
     if predicted_masks:
       predicted_mask = predicted_masks[i]
-      ax[i, 2].imshow(predicted_mask, interpolation="nearest")
-      ax[i, 2].set_title("Predicted mask")
-      ax[i, 2].set_axis_off()
+      ax[i, cols - 1].imshow(predicted_mask, interpolation="nearest")
+      ax[i, cols - 1].set_title("Predicted mask")
+      ax[i, cols - 1].set_axis_off()
   plt.tight_layout()
   if save:
     root = os.getcwd()
@@ -555,7 +565,7 @@ def disk_iterations(image):
   fig, ax = plt.subplots(3, 3, figsize=(15, 15))
   for n, ax in enumerate(ax.flatten()):
     ax.set_title(f'Radius at {radi[n]}', fontsize=f_size)
-    ax.imshow(entropy(image_gray, disk(radi[n])), cmap='magma');
+    ax.imshow(entropy(image_gray, disk(radi[n])), cmap='magma')
     ax.set_axis_off()
   fig.tight_layout()
 
