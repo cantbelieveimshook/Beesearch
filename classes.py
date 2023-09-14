@@ -29,6 +29,17 @@ def preprocess_mask(input_mask):
 class ShapeException(Exception):
   pass
 
+# Randomly applies an augmentation with a probability p.
+class RandomApply(nn.Module):
+  def __init__(self, fn, p):
+    super().__init__()
+    self.fn = fn
+    self.p = p
+
+  def forward(self, x):
+    if random.random() > self.p:
+      return x
+    return self.fn(x)
 
 '''
 Creates a custom Pytorch dataset for the bee and hair pipelines.
@@ -39,7 +50,8 @@ Class methods:
   apply transformations if relevant, and return the following images and masks.
 '''
 class BeeInferenceDataset(Dataset):
-  def __init__(self, images_filenames, images_directory, masks_directory, image_transform=None, mask_transform=None):
+  def __init__(self, images_filenames, images_directory, masks_directory=None, image_transform=None,
+               mask_transform=None):
     self.images_filenames = images_filenames
     self.images_directory = images_directory
     self.masks_directory = masks_directory
@@ -61,18 +73,29 @@ class BeeInferenceDataset(Dataset):
 
   def __getitem__(self, idx):
     image_filename = self.images_filenames[idx]
-    image = cv2.imread(os.path.join(self.images_directory, image_filename))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    mask = cv2.imread(os.path.join(self.masks_directory, image_filename))
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    if self.image_transform is not None:
-      transformed_img = self.image_transform(image=image)
-      image = transformed_img["image"]
-    if self.mask_transform is not None:
-      transformed_mask = self.mask_transform(image=mask)
-      mask = preprocess_mask(transformed_mask["image"])
-      mask = mask.float()
-    return image, mask
+    try:
+      image = cv2.imread(os.path.join(self.images_directory, image_filename))
+      image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+      if self.image_transform is not None:
+        transformed_img = self.image_transform(image=image)
+        image = transformed_img["image"]
+        image = image.float()
+
+      if self.masks_directory:
+        mask = cv2.imread(os.path.join(self.masks_directory, image_filename))
+        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        if self.mask_transform is not None:
+          transformed_mask = self.mask_transform(image=mask)
+          mask = preprocess_mask(transformed_mask["image"])
+          mask = mask.float()
+      else:
+        mask = torch.zeros((3, 256, 256))
+
+      return image, mask
+    except Exception as e:
+      print(self.getname(idx))
+      print("An exception occurred: ", e)
+      return torch.zeros((3, 256, 256)), torch.zeros((3, 256, 256))
 
 '''
 This is used to create test datasets only, when crop = True.
