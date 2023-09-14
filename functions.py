@@ -38,6 +38,31 @@ This file contains most of the functions that are used in this repository.
 The functions that make the augmented images are located in make_augment_functions.py
 '''
 
+root = os.getcwd()
+
+# Checks if each directory from the list of directories exists, and if not, creates the directory.
+def make_directories():
+  directory_list = [
+    "artificial_bees",
+    "augmented_masks",
+    "bee_crops",
+    "bee_original",
+    "entropy_images_bee",
+    "entropy_images_hair",
+    "hair_original",
+    "original_bee_masks",
+    "original_hair_masks",
+    "predicted_bee_masks",
+    "predicted_hair_masks",
+    "removed_background_bees",
+    "segmented_hair_final"
+    ]
+
+  for i in directory_list:
+    path = os.path.join(root, i)
+    if not os.path.isdir(path):
+      os.mkdir(path)
+
 # Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
 # from the original bee images, then saves these modified images in a new folder.
 def make_fake_bees(images_path, masks_path, masks, save_path):
