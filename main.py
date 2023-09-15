@@ -13,8 +13,9 @@ from artificial_bees import artificial_bees_main, artificial_hair_main
 from segment_hair import segment_hair_main
 from entropy_analysis import entropy_analysis
 from image_regression import image_regression, predicted_rating_entropy_values, predicted_rating_entropy_surface_area
+from calculate_brightness import calculate_brightness_main
 
-
+# Set to True if you want to artificially remove the background of your images before using them for segmentation.
 remove_background = False
 if len(sys.argv) > 1:
     if sys.argv[1] == True or sys.argv[1] == False:
@@ -59,4 +60,5 @@ image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
 predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating, data_transform = data_transform)
 predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area, data_transform = data_transform)
 
-
+# Brightness calculation
+calculate_brightness_main()

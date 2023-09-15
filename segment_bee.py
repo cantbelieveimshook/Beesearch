@@ -17,7 +17,7 @@ from functions import make_augs, train, predict, resize_predictions, display_ima
 '''
 to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
 Only set to True if you have a set of images and corresponding masks for the model to train on.
-Set the seed for not reproducibility.
+Set the seed for reproducibility.
 '''
 def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     root = os.getcwd()

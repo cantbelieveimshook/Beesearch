@@ -63,6 +63,40 @@ def make_directories():
     if not os.path.isdir(path):
       os.mkdir(path)
 
+
+'''
+Calculates the average pixel value (brightness) of the bee pixels in an image, then saves each image name and corresponding pixel value to a csv.
+Requires a folder or list of segmented masks to work. Does not include the pixel values of any non-bee pixel.
+Set load = False if you are creating a new csv, and set load = True if you are adding more rows to an existing average_brightness csv.
+This function is very time-intensive, so it may be necessary to divide up your lists of images and masks and run the function several times, with load set to True.  
+'''
+def calculate_brightness(images, masks, images_directory, csv_path = root + 'average_brightness.csv', save = True, load = False):
+  if load:
+    df = pd.read_csv(csv_path, index_col = False)
+  else:
+    df = pd.DataFrame(columns = ["Filename", "Brightness Rating"])
+  for i in range(len(images)):
+    means = []
+    image_path = os.path.join(images_directory, images[i])
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    mask = masks[i]
+    for j in range(len(mask)):
+      for k in range(len(mask[j])):
+        if mask[j][k] != 0.0:
+          means.append(image[j][k].mean())
+    means = np.array(means).mean()
+
+    row = [[images[i], means]]
+    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating"])
+    df = pd.concat([df, row], axis = 0, ignore_index = True)
+
+  if save:
+    df.to_csv(csv_path, index = False)
+
+  return df
+
+
 # Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
 # from the original bee images, then saves these modified images in a new folder.
 def make_fake_bees(images_path, masks_path, masks, save_path):
@@ -234,6 +268,8 @@ def resize_predictions(predictions, dataset, save=True, save_path=root + 'predic
     if save:
       name = dataset.getname(i)
       save_name = save_path + name
+      if not os.path.isdir(save_name):
+        os.mkdir(save_name)
       cv2.imwrite(save_name, full_sized_mask)
     i += 1
 
