@@ -8,6 +8,7 @@ import os
 import sys
 import torchvision.transforms as transforms
 from remove_background import remove_background_main
+from functions import make_directories
 from segment_bee import segment_bee_main
 from artificial_bees import artificial_bees_main, artificial_hair_main
 from segment_hair import segment_hair_main
@@ -35,6 +36,7 @@ data_transform = transforms.Compose([
                              std=[1, 1, 1])
     ])
 
+make_directories()
 segment_bee_main(background_removed = remove_background, to_train = False)
 artificial_bees_main()
 segment_hair_main(to_crop = True, to_train = False)
