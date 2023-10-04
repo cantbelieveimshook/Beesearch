@@ -2,6 +2,7 @@
 Name: Kathryn Chen
 Date: September 14, 2023
 '''
+import os
 
 from classes import *
 from functions import predict, resize_predictions, calculate_brightness
@@ -15,10 +16,10 @@ pixels are overall left out of the calculations.
 '''
 def calculate_brightness_main():
     device = "cuda" if torch.cuda.is_available() else torch.device('cpu')
-    root = '/content/drive/MyDrive/Beesearch/2023Updated/'
-    original_images_directory = root + 'whole_bee_original/'
+    root = os.getcwd()
+    original_images_directory = root + 'bee_original/'
     images = os.listdir(original_images_directory)
-    model = torch.load('/content/drive/MyDrive/Beesearch/Models/Whole bee final/Model_303').to(device)
+    model = torch.load(root + 'Models//Whole_bee_model').to(device)
     params = {
         "device": device,
         "batch_size": 16,
