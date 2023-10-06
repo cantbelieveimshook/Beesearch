@@ -12,7 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from paths import *
 from classes import BeeInferenceDataset, CroppedDataset
-from functions import train, predict, resize_predictions, display_image_grid, display_bees, count_surface_area, calculate_accuracy, predict_crops, restitch_predictions
+from functions import train, predict, resize_predictions, display_image_grid, display_bees, calculate_accuracy, predict_crops, restitch_predictions
 
 '''
 to_crop determines if the images will be cropped before being segmented, then restitchced afterwards.
@@ -40,7 +40,7 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = torch.load(root + 'models/model_98.pth')
+    model = torch.load(root + 'models/model_98.pth').to(device)
 
     params = {
         "device": device,
@@ -106,8 +106,7 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
             display_image_grid(artificial_bees[:10], artificial_bees_directory, masks_directory, predicted_masks = restitched_predicted_masks[:10],
                                save_path = 'hair_predictions')
 
-        # If you want the surface area and accuracy metrics
-        count_surface_area(restitched_predicted_masks, bee_dataset, path=root + 'hair_surface_areas.csv')
+        # If you want the accuracy metrics
         calculate_accuracy(restitched_predicted_masks, masks_directory=masks_directory, filenames=test_images_filenames,
                            csv_path=root + 'hair_prediction_accuracies.csv')
 
@@ -131,11 +130,9 @@ def segment_hair_main(to_crop = True, to_train = False, seed = 0):
         else:
             display_image_grid(artificial_bees[:10], artificial_bees_directory, masks_directory, predicted_masks = predicted_masks[:10],
                                save_path = 'hair_predictions')
-        # If you want the surface area and accuracy metrics
-        surface_area_csv = os.path.join(root, 'hair_surface_areas.csv')
+        # If you want the accuracy metrics
         prediction_accuracy_csv = os.path.join(root, 'hair_prediction_accuracies.csv')
 
-        count_surface_area(predicted_masks, test_dataset, path = surface_area_csv)
         calculate_accuracy(predicted_masks, masks_directory=masks_directory, filenames=test_images_filenames,
                            csv_path = prediction_accuracy_csv)
 

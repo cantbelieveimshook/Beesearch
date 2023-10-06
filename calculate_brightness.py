@@ -2,7 +2,6 @@
 Name: Kathryn Chen
 Date: September 14, 2023
 '''
-import os
 
 from classes import *
 from functions import predict, resize_predictions, calculate_brightness

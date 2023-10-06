@@ -12,7 +12,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from paths import *
 from classes import BeeInferenceDataset
-from functions import make_augs, train, predict, resize_predictions, display_image_grid, display_bees, count_surface_area, calculate_accuracy
+from functions import make_augs, train, predict, resize_predictions, display_image_grid, display_bees, calculate_accuracy
 
 '''
 to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
@@ -103,10 +103,8 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     else:
         display_image_grid(test_images_filenames[:10], images_directory, masks_directory, predicted_masks=predicted_masks[:10])
 
-    # If you want the surface area and accuracy metrics
-    surface_area_csv = os.path.join(root, 'bee_surface_areas.csv')
+    # If you want the accuracy metrics
     prediction_accuracy_csv = os.path.join(root, 'bee_prediction_accuracies.csv')
 
-    count_surface_area(predicted_masks, test_dataset, path = surface_area_csv)
     calculate_accuracy(predicted_masks, masks_directory = masks_directory, filenames = test_images_filenames,
                            csv_path = prediction_accuracy_csv)

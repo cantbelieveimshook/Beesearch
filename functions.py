@@ -15,8 +15,7 @@ import time
 import os
 import torch
 import pandas as pd
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+from torchvision import utils
 import math
 import cv2
 import matplotlib.pyplot as plt
@@ -25,7 +24,7 @@ import numpy as np
 from skimage.io import imread, imshow, imsave
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
-from skimage.color import rgb2hsv, rgb2gray, rgb2yuv
+from skimage.color import rgb2gray
 from csv import writer
 from collections import defaultdict
 import glob
@@ -99,17 +98,32 @@ def calculate_brightness(images, masks, images_directory, csv_path = root + 'ave
 
 # Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
 # from the original bee images, then saves these modified images in a new folder.
-def make_fake_bees(images_path, masks_path, masks, save_path):
-  for i in masks:
+def make_fake_bees(images_path, mask_names, masks_path, predicted_masks = None, save_path = root + "artificial_bees"):
+  if not os.path.isdir(save_path):
+    os.mkdir(save_path)
+
+  idx = 0
+
+  for i in mask_names:
     im = plt.imread(images_path + i)
-    mask = plt.imread(masks_path + i)
-    mask = preprocess_mask(mask)
+    if not masks_path:
+      if not predicted_masks:
+        raise TypeError("Either predicted_masks or masks_path must be not None.")
+      else:
+        mask = predicted_masks[idx]
+        mask = mask[:, :, np.newaxis]
+        mask = np.concatenate([mask] * 3, axis=-1)
+    else:
+      mask = plt.imread(masks_path + i)
+      mask = preprocess_mask(mask)
     if np.shape(im) != np.shape(mask):
       raise ShapeException("Images and masks are mismatched shapes: file " + i)
     fake_bee = im * mask
     fake_bee = fake_bee.astype('uint8')
     bee_reborn = cv2.cvtColor(fake_bee, cv2.COLOR_BGR2RGB)
     cv2.imwrite(save_path + i, bee_reborn)
+
+    idx += 1
 
 
 # Converts the transparent pixels in the bees with artificially removed backgrounds
@@ -391,22 +405,36 @@ def display_bees(images_filenames, images_directory, predicted_masks,
     plt.show()
 
 
-# For each predicted mask, counts the number of predicted bee pixels and the percentage
-# those pixels comprise the total image, then saves both values of each image into a csv.
-def count_surface_area(masks, dataset, path):
-  df = pd.DataFrame(columns=['name', 'surface area', 'percentage of pixels'])
-  for i in range(len(masks)):
+'''
+Required a set of predicted bee and predicted hair masks for a set of images. Counts the number of predicted bee pixels and 
+predicted hair pixels, then takes the ratio of those pixel counts and saves the bee pixel counts of each image into a csv.
+dataset is just used to get the filename of the image. Either the bee or hair dataset should work, assuming they are using 
+the same base images.
+save_path is the path that the csv file will be saved to if save = True.
+load_path is the path that loads the csv file that will be added onto if load = True.
+'''
+def count_surface_area(bee_masks, hair_masks, dataset, save_path, load_path, save=True, load=False):
+  if load:
+    df = pd.read_csv(load_path, index_col=False)
+  else:
+    df = pd.DataFrame(columns=['name', 'surface area', 'percentage of pixels'])
+  for i in range(len(bee_masks)):
     name = dataset.images_filenames[i]
-    unique = np.unique(masks[i], return_counts=True)
-    if unique[1][0] == np.size(masks[i]):
+    bee_unique = np.unique(bee_masks[i], return_counts=True)
+    hair_unique = np.unique(hair_masks[i], return_counts=True)
+    if bee_unique[1][0] == np.size(bee_masks[i]):
       df.loc[len(df)] = [name, 0, 0]
-    elif len(unique[1]) == 2:
-      bee_pixels = unique[1][1]
-      total_pixels = np.shape(masks[i])[0] * np.shape(masks[i])[1]
-      percentage = bee_pixels / total_pixels
+    elif len(bee_unique[1]) == 2:
+      bee_pixels = bee_unique[1][1]
+      hair_pixels = hair_unique[1][1]
+      percentage = hair_pixels / bee_pixels
       percentage = f'{str(percentage * 100)}%'
-      df.loc[len(df)] = [name, bee_pixels, percentage]
-  df.to_csv(path, index=False)
+      row = [[name, bee_pixels, percentage]]
+      row = pd.DataFrame(row, columns=['name', 'surface area', 'percentage of pixels'])
+      df = pd.concat([df, row], axis=0, ignore_index=True)
+
+  if save:
+    df.to_csv(save_path, index=False)
 
 
 # Calculates the jaccard (intersection over union) value.
@@ -731,8 +759,7 @@ image regression
 # Helper function to show a batch and check if images are successfully loaded
 def show_landmarks_batch(sample_batched, landmarks_batch):
     """Show image with landmarks for a batch of samples."""
-    images_batch = \
-      sample_batched['image']
+    images_batch = sample_batched['image']
     batch_size = len(images_batch)
     im_size = images_batch.size(2)
     grid_border_size = 2
