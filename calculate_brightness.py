@@ -11,13 +11,15 @@ from albumentations.pytorch import ToTensorV2
 '''
 Calculates the brightness, which is measured by the average pixel value, of every pixel in an image that is considered to be a "bee" pixel.
 This may mean that some pixels are inaccurately included or excluded from the calculations, but this is to help ensure that the background
-pixels are overall left out of the calculations. 
+pixels are overall left out of the calculations.
+It is important to note that although the bee segmentation model used for most of the other scripts segments out the eyes, wings, 
+antennae, and tongues, the model used for this script does not so that those parts of the bee can be included in the brightness calculation.
 '''
 def calculate_brightness_main():
     device = "cuda" if torch.cuda.is_available() else torch.device('cpu')
     root = os.getcwd()
-    original_images_directory = root + 'bee_original/'
-    images = os.listdir(original_images_directory)
+    bee_images_directory = root + 'bee_original/'
+    images = os.listdir(bee_images_directory)
     model = torch.load(root + 'Models/Whole_bee_model').to(device)
     params = {
         "device": device,
@@ -31,8 +33,8 @@ def calculate_brightness_main():
          ToTensorV2()]
     )
 
-    test_dataset = BeeInferenceDataset(images, original_images_directory, image_transform=image_transform)
+    test_dataset = BeeInferenceDataset(images, bee_images_directory, image_transform=image_transform)
     predictions = predict(model, params, test_dataset)
     predicted_masks = resize_predictions(predictions, test_dataset, save=True, save_path=root + 'predicted_bees_with_eyes_wings_antennae/')
 
-    calculate_brightness(images, predicted_masks, original_images_directory, save = True, load = False)
+    calculate_brightness(images, predicted_masks, bee_images_directory, save = True, load = False)

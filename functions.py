@@ -1,6 +1,7 @@
 '''
 Name: Kathryn Chen
 Name: Luning Ding
+Name: Nicholas Alexander
 Date: June 23, 2023
 '''
 
@@ -69,9 +70,13 @@ Requires a folder or list of segmented masks to work. Does not include the pixel
 Set load = False if you are creating a new csv, and set load = True if you are adding more rows to an existing average_brightness csv.
 This function is very time-intensive, so it may be necessary to divide up your lists of images and masks and run the function several times, with load set to True.  
 '''
-def calculate_brightness(images, masks, images_directory, csv_path = root + 'average_brightness.csv', save = True, load = False):
+def calculate_brightness(images, masks, images_directory, csv_path = root + 'average_brightness.csv',
+                         load_csv_path = root + 'average_brightness.csv', save = True, load = False):
   if load:
-    df = pd.read_csv(csv_path, index_col = False)
+    try:
+      df = pd.read_csv(load_csv_path, index_col = False)
+    except:
+      raise IOError("The csv filename does not exist. Make sure the filename of an existing csv is given for load_csv_path.")
   else:
     df = pd.DataFrame(columns = ["Filename", "Brightness Rating"])
   for i in range(len(images)):
@@ -210,6 +215,7 @@ def train(model, batch_size, loss_fn, train_dataloader, val_dataloader, schedule
 
 
 '''
+This is a modified version of a function originally created by Nicholas Alexander.
 Predicts the images of a test dataset using a model.
 Zips the original image height and width along with the predicted crop, 
 then adds that to a list of predictions that is returned at the end.
@@ -270,8 +276,11 @@ def predict_crops(model, params, dataloader):
   return predictions
 
 
-# Used to resize the predicted images back to their original sizes.
-# If save = True, it also saves the predicted images to the designated save path.
+'''
+This is a modified version of code originally written by Nicholas Alexander.
+Used to resize the predicted images back to their original sizes.
+If save = True, it also saves the predicted images to the designated save path.
+'''
 def resize_predictions(predictions, dataset, save=True, save_path=root + 'predicted_bee_masks/'):
   i = 0
   predicted_masks = []
@@ -327,7 +336,9 @@ def restitch_predictions(predictions, test_dataset, save=True,
   return restitched_images
 
 
-'''Used to display the original image, original mask, and predicted mask in a grid.
+'''
+This is a modified version of a function originally created by Nicholas Alexander.
+Used to display the original image, original mask, and predicted mask in a grid.
 Displays two columns if no ground truth masks.
 Otherwise displays three: one for original images, one for ground truth masks, one for predicted masks.
 Ideally is used to display ten sets of images/masks.
@@ -417,7 +428,7 @@ def count_surface_area(bee_masks, hair_masks, dataset, save_path, load_path, sav
   if load:
     df = pd.read_csv(load_path, index_col=False)
   else:
-    df = pd.DataFrame(columns=['name', 'surface area', 'percentage of pixels'])
+    df = pd.DataFrame(columns=['name', 'bee_surface area', 'hair_surface_area', 'percentage of pixels'])
   for i in range(len(bee_masks)):
     name = dataset.images_filenames[i]
     bee_unique = np.unique(bee_masks[i], return_counts=True)
@@ -429,14 +440,15 @@ def count_surface_area(bee_masks, hair_masks, dataset, save_path, load_path, sav
       hair_pixels = hair_unique[1][1]
       percentage = hair_pixels / bee_pixels
       percentage = f'{str(percentage * 100)}%'
-      row = [[name, bee_pixels, percentage]]
-      row = pd.DataFrame(row, columns=['name', 'surface area', 'percentage of pixels'])
+      row = [[name, bee_pixels, hair_pixels, percentage]]
+      row = pd.DataFrame(row, columns=['name', 'bee_surface area', 'hair_surface_area', 'percentage of pixels'])
       df = pd.concat([df, row], axis=0, ignore_index=True)
 
   if save:
     df.to_csv(save_path, index=False)
 
 
+# Originally written by Nicholas Alexander.
 # Calculates the jaccard (intersection over union) value.
 def jaccard(y_true, y_pred):
   intersection = (y_true * y_pred).sum()
@@ -444,11 +456,13 @@ def jaccard(y_true, y_pred):
   return (intersection + 1e-15) / (union + 1e-15)
 
 
+# Originally written by Nicholas Alexander.
 # Calculates the dice coefficient.
 def dice(y_true, y_pred):
   return (2 * (y_true * y_pred).sum() + 1e-15) / (y_true.sum() + y_pred.sum() + 1e-15)
 
 
+# Originally written by Nicholas Alexander.
 # Calculates the raw accuracy score of accurate pixels divided by the total pixels.
 def accuracy(y_true, y_pred):
   return (((y_pred + y_true) == 2).sum() + ((y_pred + y_true) == 0).sum()) / y_true.size
@@ -472,6 +486,25 @@ def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
 
     results = pd.concat([results, pd.DataFrame(data=sample, index=[mask])])
   results.to_csv(csv_path, index = False)
+
+
+# Takes two csv files with the same metric data types, filenames, and column names, and compares their respective metrics.
+# Mainly used to compare the same metrics of two different model's segmentations on the same set of images.
+def calculate_metric_differences(csv_1, csv_2, csv_path):
+  df_1 = pd.read_csv(csv_1)
+  df_2 = pd.read_csv(csv_2)
+  equals = df_1["Name"].equals(df_2['Name'])
+  if not equals:
+    print("Either you have the wrong column name, or there are name mismatches at the following:")
+    neq = df_1.loc[~(df_1["Name"] == df_2["Name"])]
+    return neq["Name"]
+
+  new_df = pd.DataFrame()
+  new_df["Accuracy"] = df_1["Accuracy"] - df_2["Accuracy"]
+  new_df["F1"] = df_1["F1"] - df_2["F1"]
+  new_df["IoU"] = df_1["IoU"] - df_2["IoU"]
+
+  new_df.to_csv(csv_path)
 
 '''
 This is a modified version of the background removal function.
@@ -571,29 +604,6 @@ def pick_random_crops(folder_path, destination_folder, size=250, clear=False):
   print('done')
 
 
-# Counts how many images and their corresponding masks have mismatched sizes, and saves the names of any mismatched pairs,
-# along with their respective sizes, to a csv. Then prints the numbers of pairs with matching and not matching shapes.
-def entire_folder_check(folder, image_path, mask_path, csv='unmatched_shapes.csv'):
-  root = os.getcwd()
-  same_shape = 0
-  different_shape = 0
-  df = pd.DataFrame(columns=['Path', 'Image shape', 'Mask shape'])
-  for i in folder:
-    im_path = os.path.join(image_path, i)
-    masks_path = os.path.join(mask_path, i)
-    im = plt.imread(im_path)
-    masks = plt.imread(masks_path)
-    if np.shape(im) != np.shape(masks):
-      different_shape += 1
-      df.loc[len(df)] = [i, np.shape(im), np.shape(masks)]
-    else:
-      same_shape += 1
-
-  df.to_csv(root + csv)
-
-  print(same_shape, different_shape)
-
-
 '''
 Divides an image into 300 x 300 crops, with the remaining ends 256 x 256 pixels at the smallest,
 and appends the crops into a nested list that creates a new list for each row of crops, in which all
@@ -632,6 +642,115 @@ def crop(image, crop_height = 300, crop_width = 300):
 
   return crops
 
+
+'''
+Counts how many images and their corresponding masks have mismatched sizes, and saves the names of any mismatched pairs,
+along with their respective sizes, to a csv. Then prints the numbers of pairs with matching and not matching shapes.
+'''
+def entire_folder_check(folder, image_path, mask_path, csv='unmatched_shapes.csv'):
+  root = os.getcwd()
+  same_shape = 0
+  different_shape = 0
+  df = pd.DataFrame(columns=['Path', 'Image shape', 'Mask shape'])
+  for i in folder:
+    im_path = os.path.join(image_path, i)
+    masks_path = os.path.join(mask_path, i)
+    im = plt.imread(im_path)
+    masks = plt.imread(masks_path)
+    if np.shape(im) != np.shape(masks):
+      different_shape += 1
+      df.loc[len(df)] = [i, np.shape(im), np.shape(masks)]
+    else:
+      same_shape += 1
+
+  df.to_csv(root + csv)
+
+  print(same_shape, different_shape)
+
+
+'''
+Use this to find the RGB mean and standard deviation of a list of images, specified by the images parameter, in the specified directory.
+This can be used if you are attempting to normalize the specified directory's image means and standard deviations during preprocessing. 
+Example: 
+image_transform = A.Compose(
+        [A.Resize(256, 256), A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), ToTensorV2()]
+        )
+'''
+def find_normalization(directory, images):
+  idx = 0
+  image_paths = [os.path.join(directory, i) for i in images]
+  means = np.zeros(shape = (len(images), 3))
+  stds = np.zeros(shape = (len(images), 3))
+  for img in image_paths:
+    image = cv2.imread(img)
+    try:
+      image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+      image = image / 255
+      mean = np.mean(image, axis = (0, 1))
+      std = np.std(image, axis = (0, 1))
+      means[idx] = mean
+      stds[idx] = std
+      idx += 1
+    except:
+      print(img)
+
+  mu_rgb = np.mean(means, axis=0)
+  std_rgb = np.mean(stds, axis=0)
+
+  return mu_rgb, std_rgb
+
+
+'''
+Housekeeping function, used to add lists of new train, validation, and test filenames to their respective csv files.
+Specify the lists of filenames before using them as function arguments.
+This function will most likely be used if you acquire more data and want them to add them to train/validation/test datasets.
+In such situations, make sure the older filenames are included in the lists as well, or else they will not be saved to the csv files. 
+'''
+def add_new_filenames(train, val, test, train_csv=root + 'train_images.csv', val_csv=root + 'val_images.csv',
+                      test_csv=root + 'test_images.csv'):
+  train_df = pd.DataFrame(columns=['0'])
+  train_df['0'] = train
+
+  val_df = pd.DataFrame(columns=['0'])
+  val_df['0'] = val
+
+  test_df = pd.DataFrame(columns=['0'])
+  test_df['0'] = test
+
+  train_df.to_csv(train_csv)
+  val_df.to_csv(val_csv)
+  test_df.to_csv(test_csv)
+
+
+# Housekeeping function, used to check which images don't have corresponding masks
+def maskless(images, masks, path, csv = 'maskless_whole_bees.csv'):
+  j = 0
+  no_mask = []
+  df = pd.DataFrame(columns = ['path'])
+  for i in images:
+    if i not in masks:
+      pth = os.path.join(path, i)
+      oof = plt.imread(pth)
+      no_mask.append(i)
+      j += 1
+  df['path'] = no_mask
+  df.head()
+  print(no_mask)
+  df.to_csv(root + csv)
+
+
+# Housekeeping function, used if you want to copy all images from the start_path directory to the destination_path directory.
+def copy_images(start_path, destination_path):
+  os.chdir(destination_path)
+
+  start = os.listdir(start_path)
+  end = os.listdir(destination_path)
+
+  for i in start:
+    if i not in end:
+      pth = start_path + i
+      im = cv2.imread(pth)
+      cv2.imwrite(i, im)
 
 '''
 Name: Luning Ding

@@ -1,6 +1,7 @@
 '''
 Name: Kathryn Chen
 Name: Luning Ding
+Name: Nicholas Alexander
 Date: June 23, 2023
 '''
 
@@ -14,6 +15,7 @@ from PIL import Image
 import torch.nn as nn
 
 '''
+By Nicholas Alexander.
 Divides mask pixel values by 255 so the values are between 0 and 1,
 then sets all pixel values greater than 0.5 to 1 and all values less  
 than 0.5 to 0.
@@ -29,19 +31,8 @@ def preprocess_mask(input_mask):
 class ShapeException(Exception):
   pass
 
-# Randomly applies an augmentation with a probability p.
-class RandomApply(nn.Module):
-  def __init__(self, fn, p):
-    super().__init__()
-    self.fn = fn
-    self.p = p
-
-  def forward(self, x):
-    if random.random() > self.p:
-      return x
-    return self.fn(x)
-
 '''
+Modified from a Pytorch dataset created by Nicholas Alexander.
 Creates a custom Pytorch dataset for the bee and hair pipelines.
 Class methods:
 - getsize returns the original size of a specified image

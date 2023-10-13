@@ -9,9 +9,17 @@ from classes import *
 from functions import preprocess_mask, predict, resize_predictions, count_surface_area
 
 
-
+'''
+Calculates the "surface area" of hair on a bee by counting the number of segmented bee pixels, the number of segmented 
+hair pixels, and the ratio of segmented hair to segmented bee pixels to get an idea of what percent of the bee's surface area 
+is covered by hair.
+Keep in mind that since the bee masks segment out the eyes, wings, antennae, and tongues, the surface area of these parts of the bee
+are not included in any surface area calculations. This is because we are not interested in measuring any hair that may exist on 
+those regions, so we excluded them from the total area of the bee's body that we want to measure hair on.   
+'''
 def calculate_surface_area_main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
+
     root = os.getcwd()
     bee_images_directory = os.path.join(root, 'bee_original')
     artificial_bees_directory = os.path.join(root, 'artificial_bees')
@@ -23,7 +31,7 @@ def calculate_surface_area_main():
     bee_masks = os.listdir(bee_masks_directory)
     hair_masks = os.listdir(hair_masks_directory)
 
-    bee_model = model = torch.load(root + 'models/New_Bee_Model').to(device)
+    bee_model = torch.load(root + 'models/New_Bee_Model').to(device)
     hair_model = torch.load(root + 'models/model_98.pth').to(device)
 
     params = {
