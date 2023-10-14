@@ -2,7 +2,9 @@
 
 ### In order to run everything:
 
-```$python main.py```
+```
+$python main.py
+```
 
 ### How to upload images:
 
