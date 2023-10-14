@@ -1,5 +1,9 @@
 # README
 
+# In order to run everything:
+
+$python main.py
+
 How to upload images:
 
 There are many differnt image folders with a wide variety of purposes. You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
@@ -98,6 +102,4 @@ path = root + 'image_regression/'
 
 This folder contains the data and models necessary for the hairiness rating scripts. Use if you plan on calculating hairiness scores for bee images.
 
-In order to run everything:
 
-$python3 main.py
