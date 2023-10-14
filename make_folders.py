@@ -3,23 +3,31 @@ Name: Kathryn Chen
 Date: June 23, 2023
 '''
 
-from paths import *
+from functions import make_directories
 
 '''
 Run this file first to make the necessary folders,
 then fill the original_bee_masks and bee_original
 directories with the necessary images.
+Comment out the directories you do not want to make.
 '''
 
-folders = [original_bee_masks_directory,
-           background_bees_directory,
-           bee_images_directory,
-           bee_masks_directory,
-           artificial_bees_directory,
-           original_hair_masks_directory,
-           hair_images_directory,
-           hair_masks_directory]
+def make_folders_main():
+    directory_list = [
+        "artificial_bees",
+        "augmented_masks",
+        "bee_crops",
+        "bee_original",
+        "entropy_images",
+        "entropy_analysis",
+        "image_regression",
+        "hair_original",
+        "original_bee_masks",
+        "original_hair_masks",
+        "predicted_bee_masks",
+        "predicted_hair_masks",
+        "removed_background_bees",
+        "segmented_hair_final"
+    ]
 
-for i in folders:
-    if not os.path.exists(i):
-        os.mkdir(i)
+    make_directories(directory_list)

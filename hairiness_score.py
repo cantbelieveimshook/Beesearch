@@ -50,8 +50,8 @@ def hairiness_score_main():
     ])
 
     rating_dataset = HairnessRatingDataset(
-        csv_file='/content/drive/MyDrive/Pilosity ML Project/2023Updated/Masking Team/Hairiness Manual Score_4.csv',
-        root_dir='/content/drive/MyDrive/Pilosity ML Project/2023Updated/random_artificial_bee_crops',
+        csv_file = rating_path,
+        root_dir = root,
         transform=data_transform)
 
     dataset_loader = DataLoader(rating_dataset, batch_size=8,
