@@ -13,9 +13,31 @@ In order to artificially isolate the hair in images of bees, it is necessary to 
 
 The script to create the first set of segmentations is located in segment_bee.py.
 
+The script to create the second set of segmentations is located in segment_hair.py.
 
-When you run these scripts, there is also the option to train them on labeled datasets. This requires the existence of images and corresponding masks.
+The script to create both the artificial bees and the artificial hair is located in artificial_bees.py
 
+When you run these scripts, there is also the option to train them on labeled datasets. This requires the existence of images and corresponding masks. Training the models may further improve performance, but is not necessary.
+
+### Image analysis on hair
+
+
+### Other scripts and what they do
+classes.py - contains the Python classes used by the other scripts
+
+functions.py - contains the functions used by the other scripts
+
+paths.py - contains file paths used by the other scripts
+
+make_folders.py - creates the necessary directories if they do not already exist
+
+make_augment_functions.py - contains the functions used to create augmented images and masks
+
+make_augmentations.py - creates augmented images and masks
+
+bee_crops.py - divides images into crops, then saves these crops into another folder. Use if you want to create cropped hair masks from the images.
+
+remove_background.py - artificially removes the backgrounds from bee images and saves those images into a separate folder. Use if you believe black backgrounds will improve segmentation over the original backgrounds.
 
 ### How to upload images:
 
