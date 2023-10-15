@@ -5,6 +5,17 @@
 ```
 $python main.py
 ```
+### Introduction
+
+
+### Model training and segmentation
+In order to artificially isolate the hair in images of bees, it is necessary to use machine learning models to first create segmentations of bees with the eyes, wings, antennae, and tongues removed, before creating segmentations of just the bee hair.
+
+The script to create the first set of segmentations is located in segment_bee.py.
+
+
+When you run these scripts, there is also the option to train them on labeled datasets. This requires the existence of images and corresponding masks.
+
 
 ### How to upload images:
 
@@ -104,4 +115,4 @@ path = root + 'image_regression/'
 
 This folder contains the data and models necessary for the hairiness rating scripts. Use if you plan on calculating hairiness scores for bee images.
 
-
+### Citation
