@@ -23,7 +23,7 @@ Loop over the entire folder for artificial_bees using disk 6
 Get the matrix of means, median, and standard deviations of enprty valueseach artificial bee image
 Output the entropy images to entropy_output_path
 '''
-def entropy_analysis(image_folder_path,entropy_output_path, csv_file_name):
+def entropy_analysis(image_folder_path, entropy_output_path, csv_file_name):
   '''
   image_folder_path: the directory to the artificial bee images
   entropy_output_path: the directory to store the output entropy images
