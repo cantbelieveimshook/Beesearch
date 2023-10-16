@@ -278,7 +278,7 @@ def resize_predictions(predictions, dataset, save=True, save_path=root + 'predic
       save_name = save_path + name
       if not os.path.isdir(save_name):
         os.mkdir(save_name)
-      cv2.imwrite(save_name, full_sized_mask)
+      cv2.imwrite(save_name, full_sized_mask * 255)
     i += 1
 
   return predicted_masks
@@ -314,7 +314,7 @@ def restitch_predictions(predictions, test_dataset, save=True,
     if save:
       name = test_dataset.getname(idx)
       save_name = save_path + name
-      cv2.imwrite(save_name, restitch)
+      cv2.imwrite(save_name, restitch * 255)
 
     idx += 1
 
