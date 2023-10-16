@@ -20,12 +20,22 @@ The script to create both the artificial bees and the artificial hair is located
 When you run these scripts, there is also the option to train them on labeled datasets. This requires the existence of images and corresponding masks. Training the models may further improve performance, but is not necessary.
 
 ### Image analysis on hair
+We have developed several ways to analyze bee hair and hairiness using several different scripts. 
 
+calculate_surface_area.py - calculates the "hairiness" of a bee by dividing the number of predicted hair pixels by the number of predicted bee pixels and saving the results in a csv file
+
+calculate_brightness.py - calculates the "brightness" of a bee by taking the average of every bee pixel in an image and saving those values as brightness scores in a csv file
+
+entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. The use of entropy to analyze bee hair was done by _ in _.
+
+hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50] (https://arxiv.org/abs/1512.03385) model.
+
+image_regression.py - predicts entropy values of a bee, both with and without dividing by the surface area. It then plots the correlation between the entropy ratings and the hairiness scores.
 
 ### Other scripts and what they do
 classes.py - contains the Python classes used by the other scripts
 
-functions.py - contains the functions used by the other scripts
+functions.py - contains most of the functions used by the other scripts
 
 paths.py - contains file paths used by the other scripts
 
