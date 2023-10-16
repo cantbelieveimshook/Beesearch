@@ -9,6 +9,15 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 '''
+IMPORTANT NOTE:
+set load = True if you are adding more rows to an existing average_brightness csv.
+Depending on your available hardware, this script may take up a lot of time and RAM, so it will likely be necessary to divide up your 
+lists of images and masks and run the function several times. After running it the first time, change the load parameter from False to True.
+This allows the calculate_brightness function to load and add on to the csv file created when the function was run the first time, 
+instead of creating a new csv each time the script is run.
+ex: calculate_brightness(images[40:80], predicted_masks[40:80], bee_images_directory, save = True, load = True)
+The above calculates brightness for the 40th to 80th images in a folder. Adjust based on the number of images you have.
+
 Calculates the brightness, which is measured by the average pixel value, of every pixel in an image that is considered to be a "bee" pixel.
 This may mean that some pixels are inaccurately included or excluded from the calculations, but this is to help ensure that the background
 pixels are overall left out of the calculations.
