@@ -26,7 +26,7 @@ calculate_surface_area.py - calculates the "hairiness" of a bee by dividing the 
 
 calculate_brightness.py - calculates the "brightness" of a bee by taking the average of every bee pixel in an image and saving those values as brightness scores in a csv file
 
-entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. The use of entropy to analyze bee hair was done by _ in _.
+entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. [The use of entropy to analyze bee hair] (https://pubmed.ncbi.nlm.nih.gov/28028464/) was done by Stavert et. in 2016.
 
 hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50] (https://arxiv.org/abs/1512.03385) model.
 
