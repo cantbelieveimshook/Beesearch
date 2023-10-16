@@ -4,7 +4,6 @@ Date: June 23, 2023
 '''
 
 import random
-import sys
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import torch
@@ -13,22 +12,25 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from paths import *
 from classes import BeeInferenceDataset
-from functions import make_augs, train, predict, resize_predictions, display_image_grid, display_bees, count_surface_area, calculate_accuracy
+from functions import make_augs, train, predict, resize_predictions, display_image_grid, display_bees, calculate_accuracy
 
-# to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
-# Only set to True if you have a set of images and corresponding masks for the model to train on.
-def segment_bee_main(background_removed = False, to_train = False):
+'''
+to_train determines if the model will be trained on a set of images and masks before the model outputs predicted segmentations.
+Only set to True if you have a set of images and corresponding masks for the model to train on.
+Set the seed for reproducibility.
+'''
+def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     root = os.getcwd()
     if background_removed:
         images_directory = os.path.join(root, 'removed_background_bees')
     else:
         images_directory = os.path.join(root, 'bee_original')
-    masks_directory = root + 'whole_bee_mask/'
+    masks_directory = os.path.join(root, 'whole_bee_mask/')
     images = os.listdir(images_directory)
     masks = os.listdir(masks_directory)
 
     # shuffle images to increase likelihood of balanced train, val, and test datasets
-    random.shuffle(images)
+    random.Random(seed).shuffle(images)
 
     train_count = int(0.6 * len(images))
     test_count = int(0.2 * len(images))
@@ -39,12 +41,21 @@ def segment_bee_main(background_removed = False, to_train = False):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = torch.load(root + 'models/Model_300').to(device)
+    model = torch.load(root + 'models/New_Bee_Model').to(device)
 
     params = {
         "device": device,
         "lr": 0.001,
         "batch_size": 2,
+        "num_workers": 4,
+        "epochs": 10,
+    }
+
+    # For the test loader and prediction functions specifically.
+    test_params = {
+        "device": device,
+        "lr": 0.001,
+        "batch_size": 16,
         "num_workers": 4,
         "epochs": 10,
     }
@@ -66,22 +77,22 @@ def segment_bee_main(background_removed = False, to_train = False):
     # Creates a Pytorch dataset of the test images.
     test_dataset = BeeInferenceDataset(test_images_filenames, images_directory, masks_directory,
                                        image_transform=image_transform, mask_transform = mask_transform)
-
+    test_loader = DataLoader(test_dataset, batch_size=test_params['batch_size'], shuffle=False, num_workers=params["num_workers"], pin_memory=True)
     if to_train:
         # Creates Pytorch datasets of the training and validation images.
         # Currently these datasets are using no augmentations. adjust the augmentations by altering the masterlist variable in paths.py
         train_dataset = make_augs(train_images_filenames, masterlist, image_transform, mask_transform)
         val_dataset = make_augs(val_images_filenames, masterlist, image_transform, mask_transform)
 
-        train_dataloader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True)
-        val_dataloader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False)
+        train_dataloader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True, pin_memory=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False, pin_memory=True)
 
         train(model = model, batch_size = params['batch_size'], loss_fn = loss_fn,
               train_dataloader = train_dataloader, val_dataloader = val_dataloader,
               scheduler = scheduler, optimizer = optimizer, device = device, train_images = images, epochs = 15)
 
     # Outputs the model's predicted segmentations of input bee images, with the aim of removing the eyes, wings, and antennae.
-    predictions = predict(model, params, test_dataset, batch_size=16)
+    predictions = predict(model, test_params, test_dataset, test_loader)
 
     # Resizes the 256 x 256 segmentations to their original size.
     predicted_masks = resize_predictions(predictions, test_dataset)
@@ -92,7 +103,8 @@ def segment_bee_main(background_removed = False, to_train = False):
     else:
         display_image_grid(test_images_filenames[:10], images_directory, masks_directory, predicted_masks=predicted_masks[:10])
 
-    # If you want the surface area and accuracy metrics
-    count_surface_area(predicted_masks, test_dataset, path=root + 'bee_surface_areas.csv')
+    # If you want the accuracy metrics
+    prediction_accuracy_csv = os.path.join(root, 'bee_prediction_accuracies.csv')
+
     calculate_accuracy(predicted_masks, masks_directory = masks_directory, filenames = test_images_filenames,
-                           csv_path = root + 'bee_prediction_accuracies.csv')
+                           csv_path = prediction_accuracy_csv)
