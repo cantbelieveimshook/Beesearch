@@ -27,13 +27,14 @@ antennae, and tongues, the model used for this script does not so that those par
 def calculate_brightness_main():
     device = "cuda" if torch.cuda.is_available() else torch.device('cpu')
     root = os.getcwd()
-    bee_images_directory = root + 'bee_original/'
+    results = os.path.join(root, 'analysis_results')
+    bee_images_directory = os.path.join(root, 'bee_original/')
     images = os.listdir(bee_images_directory)
-    model = torch.load(root + 'Models/Whole_bee_model').to(device)
+    model = torch.load(root + '/models/Whole_bee_model', map_location = device).to(device)
     params = {
         "device": device,
         "batch_size": 16,
-        "num_workers": 4,
+        "num_workers": 0, # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
     }
 
     image_transform = A.Compose(
@@ -46,4 +47,7 @@ def calculate_brightness_main():
     predictions = predict(model, params, test_dataset)
     predicted_masks = resize_predictions(predictions, test_dataset, save=True, save_path=root + 'predicted_bees_with_eyes_wings_antennae/')
 
-    calculate_brightness(images, predicted_masks, bee_images_directory, save = True, load = False)
+    calculate_brightness(images, predicted_masks, bee_images_directory,
+                         csv_path=os.path.join(results, 'average_brightness.csv'),
+                         load_csv_path=os.path.join(results, 'average_brightness.csv'),
+                         save = True, load = False)

@@ -3,6 +3,7 @@ Name: Luning Ding
 Date: July 5, 2023
 '''
 
+from __future__ import print_function, division
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,20 +15,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import namedtuple
 import os
-from __future__ import print_function, division
 import os
 import torch
 import pandas as pd
 from skimage import io, transform
-import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-import torch.optim as optim
 import tqdm.notebook as tqdm
 from torch.autograd import Variable
 from PIL import Image
 import cv2
-import numpy as np
 from skimage.io import imread, imshow, imsave
 from skimage import data
 from skimage.util import img_as_ubyte
@@ -77,8 +74,10 @@ def image_regression(csv_file, root_dir, model_save_path):
         ]))
     
     # Normalize the images by calculating the mean and std of the images in the dataset
-    dataset_loader = DataLoader(rating_dataset, batch_size=8,
-                            shuffle=True, num_workers=2)
+    dataset_loader = DataLoader(rating_dataset,
+                                batch_size=8,
+                                shuffle=True,
+                                num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
 
     psum    = torch.tensor([0.0, 0.0, 0.0])
     psum_sq = torch.tensor([0.0, 0.0, 0.0])
@@ -119,16 +118,22 @@ def image_regression(csv_file, root_dir, model_save_path):
     # print('validataion set length:', len(val_set))
 
     # Load the data
-    train_dataloader = DataLoader(train_set, batch_size=8,
-                            shuffle=True, num_workers=2)
-    val_dataloader = DataLoader(val_set, batch_size=8,
-                            shuffle=True, num_workers=2)
+    train_dataloader = DataLoader(train_set,
+                                  batch_size=8,
+                                  shuffle=True,
+                                  num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
+    val_dataloader = DataLoader(val_set,
+                                batch_size=8,
+                                shuffle=True,
+                                num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
     dataloaders = {'train': train_dataloader, 'val': val_dataloader}
     dataset_sizes = {'train': len(train_set), 'val': len(val_set)}
 
     #Visualize Datasets Only
-    dataloader = DataLoader(train_set, batch_size=4,
-                            shuffle=True, num_workers=0)
+    dataloader = DataLoader(train_set,
+                            batch_size=4,
+                            shuffle=True,
+                            num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
 
     # if __name__ == '__main__':
     for i_batch, sample_batched in enumerate(dataloader):
@@ -177,7 +182,7 @@ def image_regression(csv_file, root_dir, model_save_path):
 
     pretrained_model.fc = fc
 
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.load_state_dict(pretrained_model.state_dict())
 
     def count_parameters(model):
@@ -187,7 +192,6 @@ def image_regression(csv_file, root_dir, model_save_path):
 
     
     #Training The Model
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     criterion = nn.CrossEntropyLoss().to(device)
     reg_criterion = nn.MSELoss().to(device)
@@ -239,7 +243,7 @@ def image_regression(csv_file, root_dir, model_save_path):
 '''
 load the model to get predicted ratings from the model
 store ground truth ratings, predicted rating, entropy values to cvs
-plot and find the correltaion between hairiness ratings and entropy values
+plot and find the correlation between hairiness ratings and entropy values
 '''
 def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predicted_rating_cvs_path, data_transform):
     '''
@@ -249,8 +253,8 @@ def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predict
     predicted_rating_cvs_path: the path to csv file that stores the predicted ratings from the model and entropy values
     '''
 
-    model = torch.load(model_save_path)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = torch.load(model_save_path, map_location=device)
     softmax = nn.Softmax().to(device)
 
 
@@ -277,8 +281,10 @@ def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predict
 
 
     # Normalize the images by calculating the mean and std of the images in the dataset
-    dataset_loader = DataLoader(rating_dataset, batch_size=8,
-                            shuffle=True, num_workers=2)
+    dataset_loader = DataLoader(rating_dataset,
+                                batch_size=8,
+                                shuffle=True,
+                                num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
 
     psum    = torch.tensor([0.0, 0.0, 0.0])
     psum_sq = torch.tensor([0.0, 0.0, 0.0])
@@ -397,8 +403,8 @@ def predicted_rating_entropy_surface_area(csv_file, model_save_path, root_dir, s
     surface_area_csv: csv that stores the surface area percentage of bees compared to the whole image
     '''
     
-    model = torch.load(model_save_path)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = torch.load(model_save_path, map_location=device)
     softmax = nn.Softmax().to(device)
 
 
@@ -425,8 +431,10 @@ def predicted_rating_entropy_surface_area(csv_file, model_save_path, root_dir, s
                                             transform=data_transform)
     
     # Normalize the images by calculating the mean and std of the images in the dataset
-    dataset_loader = DataLoader(rating_dataset, batch_size=8,
-                            shuffle=True, num_workers=2)
+    dataset_loader = DataLoader(rating_dataset,
+                                batch_size=8,
+                                shuffle=True,
+                                num_workers=0) # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
 
     psum    = torch.tensor([0.0, 0.0, 0.0])
     psum_sq = torch.tensor([0.0, 0.0, 0.0])

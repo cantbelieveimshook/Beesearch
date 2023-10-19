@@ -19,8 +19,8 @@ those regions, so we excluded them from the total area of the bee's body that we
 '''
 def calculate_surface_area_main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
     root = os.getcwd()
+    results = os.path.join(root, 'analysis_results')
     bee_images_directory = os.path.join(root, 'bee_original')
     artificial_bees_directory = os.path.join(root, 'artificial_bees')
     bee_masks_directory = os.path.join(root, 'predicted_bee_masks')
@@ -31,8 +31,8 @@ def calculate_surface_area_main():
     bee_masks = os.listdir(bee_masks_directory)
     hair_masks = os.listdir(hair_masks_directory)
 
-    bee_model = torch.load(root + 'models/New_Bee_Model').to(device)
-    hair_model = torch.load(root + 'models/model_98.pth').to(device)
+    bee_model = torch.load(root + '/models/New_Bee_Model', map_location=device).to(device)
+    hair_model = torch.load(root + '/models/Hair_model.pth', map_location=device).to(device)
 
     params = {
         "device": device,
@@ -48,9 +48,11 @@ def calculate_surface_area_main():
          ToTensorV2()]
     )
 
-    # If there are no bee masks already made, then make a dataset to create a list of predicted masks.
+    bee_dataset = BeeInferenceDataset(bee_images, bee_images_directory, image_transform=image_transform)
+    hair_dataset = BeeInferenceDataset(artificial_bees, artificial_bees_directory, image_transform=image_transform)
+
+    # If there are no bee masks already made, then use the bee dataset to create a list of predicted masks.
     if len(bee_masks) == 0:
-        bee_dataset = BeeInferenceDataset(bee_images, bee_images_directory, image_transform=image_transform)
         bee_predictions = predict(bee_model, params, bee_dataset)
         bee_predicted_masks = resize_predictions(bee_predictions, bee_dataset)
     else:
@@ -62,9 +64,8 @@ def calculate_surface_area_main():
             bee_predicted_masks.append(mask)
 
 
-    # If there are no hair masks already made, then make a dataset to create a list of predicted masks.
+    # If there are no hair masks already made, then use the hair dataset to create a list of predicted masks.
     if len(hair_masks) == 0:
-        hair_dataset = BeeInferenceDataset(artificial_bees, artificial_bees_directory, image_transform=image_transform)
         hair_predictions = predict(hair_model, params, hair_dataset)
         hair_predicted_masks = resize_predictions(hair_predictions, hair_dataset)
     else:
@@ -77,6 +78,6 @@ def calculate_surface_area_main():
 
     # Set load = True if you want to add to an existing csv.
     count_surface_area(bee_predicted_masks, hair_predicted_masks, dataset = bee_dataset,
-                       save_path = root + 'surface_areas.csv',
-                       load_path = root + 'surface_areas.csv',
+                       save_path = os.path.join(results, 'surface_areas.csv'),
+                       load_path = os.path.join(results, 'surface_areas.csv'),
                        load=False)

@@ -37,11 +37,11 @@ data_transform = transforms.Compose([
                              std=[1, 1, 1])
     ])
 
-make_folders_main()
-segment_bee_main(background_removed = remove_background, to_train = False)
-artificial_bees_main()
-segment_hair_main(to_crop = True, to_train = False)
-artificial_hair_main()
+# make_folders_main()
+# segment_bee_main(background_removed = remove_background, to_train = False)
+# artificial_bees_main(remove_background)
+# segment_hair_main(to_crop = True, to_train = False)
+# artificial_hair_main()
 calculate_brightness_main()
 calculate_surface_area_main()
 
@@ -59,9 +59,9 @@ Optional functions to test on a single image:
 entropy_mask_viz(image)
 entropy_analysis_test(image_path)
 '''
-entropy_analysis(image_folder_path, entropy_output_path, entropy_values)
+# entropy_analysis(image_folder_path, entropy_output_path, entropy_values)
 
 # Image regression
-image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
-predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating, data_transform = data_transform)
-predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area, data_transform = data_transform)
+# image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
+# predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating, data_transform = data_transform)
+# predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area, data_transform = data_transform)
