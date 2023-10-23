@@ -1,6 +1,6 @@
 # README
 
-### In order to run everything:
+### In order to run everything
 
 ```
 $python main.py
