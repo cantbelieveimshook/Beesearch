@@ -196,7 +196,7 @@ def train(model, batch_size, loss_fn, train_dataloader, val_dataloader, schedule
 
     scheduler.step(running_vloss)
 
-    avg_vloss = running_vloss / (i)
+    avg_vloss = running_vloss / (i + 1)
     print('LOSS train {} val {}'.format(avg_loss, avg_vloss))
 
     epoch_number += 1
