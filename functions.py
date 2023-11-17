@@ -462,7 +462,7 @@ def accuracy(y_true, y_pred):
 
 # Calculates the accuracy, dice, and IoU values, then saves them to a csv file.
 def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
-  results = pd.DataFrame(columns=['Name', 'Accuracy', 'F1', 'IoU'])
+  samples = []
 
   for i, mask in enumerate(filenames):
     mask_orig = cv2.imread(os.path.join(masks_directory, mask))
@@ -475,8 +475,9 @@ def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
     f1 = dice(mask_orig, mask_pred)
 
     sample = {'Name': mask, 'Accuracy': acc, 'F1': f1, 'IoU': iou}
+    samples.append(pd.DataFrame(data=sample, index=[mask]))
 
-    results = pd.concat([results, pd.DataFrame(data=sample, index=[mask])])
+  results = pd.concat(samples)
   results.to_csv(csv_path, index = False)
 
 
