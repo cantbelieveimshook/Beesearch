@@ -9,12 +9,6 @@ import random
 import numpy as np
 from paths import *
 
-'''
-The following functions have been modified from a source.
-The original functions are written by the authors of this paper:
-https://escholarship.org/uc/item/0h07635j
-'''
-
 # This is used to ensure that the image and mask directories exist. It also includes the code for clearing the folders.
 def housekeeping(new_image_directory, new_mask_directory, clear):
     if not os.path.exists(new_image_directory):
@@ -30,6 +24,11 @@ def housekeeping(new_image_directory, new_mask_directory, clear):
         for f in files_mask:
             os.remove(os.path.join(new_mask_directory, f))
 
+'''
+The following functions have been modified from a source.
+The original functions are written by the authors of this paper:
+https://escholarship.org/uc/item/0h07635j
+'''
 
 # Creates a set of images that have been flipped vertically.
 def create_flip_set(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
