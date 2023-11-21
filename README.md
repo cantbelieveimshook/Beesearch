@@ -30,7 +30,8 @@ entropy_analysis.py - performs entropy analysis on images in a folder by display
 
 hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50](https://arxiv.org/abs/1512.03385) model.
 
-image_regression.py - contains three functions. The first function trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. The second and third functions predict entropy values of a bee, with and without dividing by the surface area, respectively. They then plot the correlation between the entropy ratings and the hairiness scores.
+image_regression.py - contains three functions. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
+The second and third functions (predicted_rating_entropy_values(), predicted_rating_entropy_surface_area()) predict entropy values of a bee, with and without dividing by the surface area, respectively. They then plot the correlation between the entropy ratings and the hairiness scores.
 
 ### Other scripts and what they do
 classes.py - contains the Python classes used by the other scripts
