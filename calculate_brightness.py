@@ -45,7 +45,7 @@ def calculate_brightness_main():
 
     test_dataset = BeeInferenceDataset(images, bee_images_directory, image_transform=image_transform)
     predictions = predict(model, params, test_dataset)
-    predicted_masks = resize_predictions(predictions, test_dataset, save=True, save_path=root + 'predicted_bees_with_eyes_wings_antennae/')
+    predicted_masks = resize_predictions(predictions, test_dataset, save=True, save_path = os.path.join(root, 'predicted_bees_with_eyes_wings_antennae/'))
 
     calculate_brightness(images, predicted_masks, bee_images_directory,
                          csv_path=os.path.join(results, 'average_brightness.csv'),
