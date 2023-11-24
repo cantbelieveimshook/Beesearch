@@ -7,6 +7,7 @@ Date: June 23, 2023
 import os
 import sys
 import torchvision.transforms as transforms
+from classes import Bottleneck, ResNet
 from remove_background import remove_background_main
 from make_folders import make_folders_main
 from segment_bee import segment_bee_main
@@ -37,21 +38,23 @@ data_transform = transforms.Compose([
                              std=[1, 1, 1])
     ])
 
-make_folders_main()
-segment_bee_main(background_removed = remove_background, to_train = False)
-artificial_bees_main(remove_background)
-segment_hair_main(to_crop = True, to_train = False)
-artificial_hair_main()
-calculate_brightness_main()
-calculate_surface_area_main()
+# make_folders_main()
+# segment_bee_main(background_removed = remove_background, to_train = False)
+# artificial_bees_main(remove_background)
+# segment_hair_main(to_crop = True, to_train = False)
+# artificial_hair_main()
+# calculate_brightness_main()
+# calculate_surface_area_main()
 
-image_folder_path = os.path.join(root, 'artificial_bees/')
-entropy_output_path = os.path.join(root, 'entropy_images/')
-entropy_values = os.path.join(root, 'entropy_analysis/', 'entropy_values_for_artificial_bees.csv')
-ground_truth_hairiness_rating = os.path.join(root, 'image_regression/', 'ground_truth_rating.csv')
-model_save = os.path.join(root, 'image_regression/')
-predicted_rating = os.path.join(root, 'image_regression/', 'predicted_rating.csv')
-surface_area = os.path.join(root, 'artificial_bees/', 'surface_area.csv')
+image_folder_path = os.path.join(root, 'random_artificial_bee_crops')
+# Defined for predicted_rating_entropy_surface_area() specifically
+image_folder_path_2 = os.path.join(root, 'bee_original')
+entropy_output_path = os.path.join(root, 'entropy_images')
+entropy_values = os.path.join(root, 'entropy_analysis', 'entropy_values_for_artificial_bees.csv')
+ground_truth_hairiness_rating = os.path.join(root, 'image_regression', 'ground_truth_rating.csv')
+model_save = os.path.join(root, 'models/state_dict_model_train_22bins_new.pt')
+predicted_rating = os.path.join(root, 'image_regression', 'predicted_rating.csv')
+surface_area = os.path.join(root, 'analysis_results', 'surface_areas.csv')
 
 # Entropy Analysis
 '''
@@ -59,9 +62,13 @@ Optional functions to test on a single image:
 entropy_mask_viz(image)
 entropy_analysis_test(image_path)
 '''
-entropy_analysis(image_folder_path, entropy_output_path, entropy_values)
+# entropy_analysis(image_folder_path, entropy_output_path, entropy_values)
 
+'''
 Image regression
-image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
-predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating, data_transform = data_transform)
-predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path, surface_area, data_transform = data_transform)
+IMPORTANT NOTE
+Do not run image_regression() unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
+'''
+# image_regression(ground_truth_hairiness_rating, image_folder_path, model_save)
+# predicted_rating_entropy_values(ground_truth_hairiness_rating, image_folder_path, model_save, predicted_rating, data_transform = data_transform)
+predicted_rating_entropy_surface_area(ground_truth_hairiness_rating, model_save, image_folder_path_2, image_folder_path, surface_area, data_transform = data_transform)

@@ -869,7 +869,7 @@ image regression
 '''
 
 # Helper function to show a batch and check if images are successfully loaded
-def show_landmarks_batch(sample_batched, landmarks_batch):
+def show_landmarks_batch(sample_batched, landmarks_batch = None):
     """Show image with landmarks for a batch of samples."""
     images_batch = sample_batched['image']
     batch_size = len(images_batch)
@@ -880,12 +880,13 @@ def show_landmarks_batch(sample_batched, landmarks_batch):
     plt.imshow(grid.numpy().transpose((1, 2, 0)))
     print('rating:', [float(rating) for rating in sample_batched['rating'].numpy()])
     print('rating bin class', [float(class_label) for class_label in sample_batched['class'].numpy()])
-    for i in range(batch_size):
-        plt.scatter(landmarks_batch[i, :, 0].numpy() + i * im_size + (i + 1) * grid_border_size,
-                   landmarks_batch[i, :, 1].numpy() + grid_border_size,
-                    s=10, marker='.', c='r')
+    if landmarks_batch:
+      for i in range(batch_size):
+          plt.scatter(landmarks_batch[i, :, 0].numpy() + i * im_size + (i + 1) * grid_border_size,
+                     landmarks_batch[i, :, 1].numpy() + grid_border_size,
+                      s=10, marker='.', c='r')
 
-        plt.title('Batch from dataloader')
+          plt.title('Batch from dataloader')
 
 
 
@@ -988,6 +989,8 @@ def train_hairiness_model(model, device, dataloaders, rank_tensor, dataset_sizes
 
 
 def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
+  root = os.getcwd()
+  csv_path = os.path.join(root, 'analysis_results/surface_areas.csv')
   idx_tensor = [idx for idx in range(20)]
   idx_tensor = Variable(torch.FloatTensor(idx_tensor)).to(device)
   rank_list = []
@@ -995,8 +998,7 @@ def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
     rank_list.append(rank_dict[i.item()])
   rank_tensor = Variable(torch.FloatTensor(rank_list)).to(device)
 
-  surface_area_df = pd.read_csv(
-    '/content/drive/MyDrive/Pilosity ML Project/2023Updated/Segmentation results/bee_surface_areas_no_new_images.csv')
+  surface_area_df = pd.read_csv(csv_path)
   imgname_df = surface_area_df['name']
   surface_area_df = surface_area_df['percentage of pixels']
 
@@ -1019,7 +1021,6 @@ def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
       expected_output = torch.sum(softmaxed_output * rank_tensor, 1)
       expected_output = expected_output[None]
       expected_output = torch.transpose(expected_output, 0, 1)
-      # print('Predicted rating w/o surface area: ', expected_output.item())
       whole_bee_dict['predicted_score'].append(expected_output.item() / float(surf_percent.strip('%')) * 100)
       print('Predicted_rating w/ surface area: ', expected_output.item() / float(surf_percent.strip('%')) * 100)
       print()
