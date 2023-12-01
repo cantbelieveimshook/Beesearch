@@ -34,12 +34,6 @@ image_regression.py - contains three functions. The first function, named image_
 The second and third functions (predicted_rating_entropy_values(), predicted_rating_entropy_surface_area()) predict entropy values of a bee, with and without dividing by the surface area, respectively. They then plot the correlation between the entropy ratings and the hairiness scores.
 
 ### Other scripts and what they do
-classes.py - contains the Python classes used by the other scripts
-
-functions.py - contains most of the functions used by the other scripts
-
-paths.py - contains file paths used by the other scripts
-
 make_folders.py - creates the necessary directories if they do not already exist
 
 make_augment_functions.py - contains the functions used to create augmented images and masks
@@ -49,6 +43,12 @@ make_augmentations.py - creates augmented images and masks
 bee_crops.py - divides images into crops, then saves these crops into another folder. Use if you want to create cropped hair masks from the images.
 
 remove_background.py - artificially removes the backgrounds from bee images and saves those images into a separate folder. Use if you believe black backgrounds will improve segmentation over the original backgrounds.
+
+classes.py - contains the Python classes used by the other scripts
+
+functions.py - contains most of the functions used by the other scripts
+
+paths.py - contains file paths used by the other scripts
 
 ### How to upload images:
 
