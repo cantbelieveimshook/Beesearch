@@ -75,11 +75,11 @@ def calculate_brightness(images, masks, images_directory, csv_path = os.path.joi
 
     artificial_image = image * mask
     non_black_pixels = (artificial_image.sum(axis = 2) > 0)
-    image = image[non_black_pixels]
+    final_image = artificial_image[non_black_pixels]
 
-    mean = np.mean(image, axis = 0)
-    median = np.median(image, axis = 0)
-    sd = np.std(image, axis = 0)
+    mean = np.mean(final_image)
+    median = np.median(final_image)
+    sd = np.std(final_image)
 
     row = [[images[i], mean, median, sd]]
     row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
