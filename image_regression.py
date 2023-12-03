@@ -4,33 +4,25 @@ Date: July 5, 2023
 '''
 
 from __future__ import print_function, division
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
-import torchvision.transforms as transforms
 import torchvision.models as models
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import namedtuple
 import os
-import os
 import torch
 import pandas as pd
-from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-import tqdm.notebook as tqdm
 from torch.autograd import Variable
 from PIL import Image
 import cv2
 from skimage.io import imread, imshow, imsave
-from skimage import data
-from skimage.util import img_as_ubyte
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
-from skimage.color import rgb2hsv, rgb2gray, rgb2yuv
+from skimage.color import rgb2gray
 import csv
 from collections import defaultdict
 from classes import HairnessRatingDataset, BasicBlock, Bottleneck, ResNet
@@ -223,16 +215,25 @@ store ground truth ratings, predicted rating, entropy values to cvs
 plot and find the correlation between hairiness ratings and entropy values
 '''
 
-def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predicted_rating_cvs_path, data_transform):
+def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predicted_rating_csv_path, data_transform):
     '''
     csv_file: the path to csv file that store the ground truth (manul) ratings for the artifical bees
     root_dir: the directory to artificial bees
     model_save_path: the path to save the model
-    predicted_rating_cvs_path: the path to csv file that stores the predicted ratings from the model and entropy values
+    predicted_rating_csv_path: the path to csv file that stores the predicted ratings from the model and entropy values
     '''
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = torch.load(model_save_path, map_location=device)
+    # Configuration of the model
+    OUTPUT_DIM = 20
+    ResNetConfig = namedtuple('ResNetConfig', ['block', 'n_blocks', 'channels'])
+
+    resnet50_config = ResNetConfig(block=Bottleneck,
+                                   n_blocks=[3, 4, 6, 3],
+                                   channels=[64, 128, 256, 512])
+    model = ResNet(resnet50_config, OUTPUT_DIM)
+
+    # model = torch.load(model_save_path, map_location=device)
     softmax = nn.Softmax(dim = -1).to(device)
 
     rating_frame = pd.read_csv(csv_file)
@@ -302,7 +303,6 @@ def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predict
         for idx in range(val_len):
             image_path = val_set[idx]['name']
             predicted_dict['image_name'].append(image_path)
-            image = Image.open(image_path)
             predicted_dict['ground_truth_rating'].append(val_set[idx]['rating'].item())
             predicted_dict['predicted_score'].append(expected_output.item())
 
@@ -340,7 +340,7 @@ def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predict
         plt.show()
 
         # Save the results from above
-        with open(predicted_rating_cvs_path, "w") as outfile:
+        with open(predicted_rating_csv_path, "w") as outfile:
 
             # creating a csv writer object
             writerfile = csv.writer(outfile)
@@ -353,7 +353,7 @@ def predicted_rating_entropy_values(csv_file, root_dir, model_save_path, predict
 
 
 '''
-Predicted ratings are influnced by surface area percentage of the bees compared to the whole bee
+Predicted ratings are influenced by surface area percentage of the bees compared to the whole bee
 This functions takes that into account by dividing predicted scores by surface area percentage
 '''
 
@@ -473,3 +473,4 @@ def predicted_rating_entropy_surface_area(csv_file, model_save_path, root_dir, c
             # exclude zeros in the matrix
             entropy_image_1 = entropy_image[entropy_image != 0]
             whole_bee_dict['Entropy_mean'].append(np.mean(entropy_image_1) / float(surf_percent.strip('%')) * 100)
+

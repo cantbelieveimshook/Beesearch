@@ -64,25 +64,31 @@ def calculate_brightness(images, masks, images_directory, csv_path = os.path.joi
     except:
       raise IOError("The csv filename does not exist. Make sure the filename of an existing csv is given for load_csv_path.")
   else:
-    df = pd.DataFrame(columns = ["Filename", "Brightness Rating"])
+    df = pd.DataFrame(columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
+
   for i in range(len(images)):
-    means = []
     image_path = os.path.join(images_directory, images[i])
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     mask = masks[i]
-    for j in range(len(mask)):
-      for k in range(len(mask[j])):
-        if mask[j][k] != 0.0:
-          means.append(image[j][k].mean())
-    means = np.array(means).mean()
+    mask = np.expand_dims(mask, axis = 2)
 
-    row = [[images[i], means]]
-    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating"])
+    artificial_image = image * mask
+    non_black_pixels = (artificial_image.sum(axis = 2) > 0)
+    image = image[non_black_pixels]
+
+    mean = np.mean(image, axis = 0)
+    median = np.median(image, axis = 0)
+    sd = np.std(image, axis = 0)
+
+    row = [[images[i], mean, median, sd]]
+    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
     df = pd.concat([df, row], axis = 0, ignore_index = True)
 
   if save:
     df.to_csv(csv_path, index = False)
+
+  return df
 
   return df
 
