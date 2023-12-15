@@ -346,7 +346,7 @@ def display_image_grid(images_filenames, images_directory, masks_directory = Non
                        save = False, save_path = 'whole_bee_predictions', filetype='.png'):
   cols = 3 if masks_directory else 2
   rows = len(images_filenames)
-  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24)) # Change these dimensions depending on your resolution needs (x and y values of each picture box size)
+  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, int(rows * 2.4))) # Change these dimensions depending on your resolution needs (x and y values of each picture box size)
   for i, image_filename in enumerate(images_filenames):
     image = cv2.imread(os.path.join(images_directory, image_filename))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
