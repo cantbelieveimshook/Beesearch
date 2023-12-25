@@ -13,20 +13,23 @@ For background_bees_directory, change removed_background_bees to bee_original if
 Change artificial_bees_directory or artificial_hair_directory if you want to make multiple folders of artificial bees/hair.
 '''
 
-def artificial_bees_main():
+def artificial_bees_main(background_removed = False):
     root = os.getcwd()
-    background_bees_directory = os.path.join(root, 'removed_background_bees')
+    if background_removed:
+        bees_directory = os.path.join(root, 'removed_background_bees')
+    else:
+        bees_directory = os.path.join(root, 'bee_original')
     bee_masks_directory = os.path.join(root, 'predicted_bee_masks')
     artificial_bees_directory = os.path.join(root, 'artificial_bees')
     masks = os.listdir(bee_masks_directory)
 
-    make_fake_bees(background_bees_directory, bee_masks_directory, masks, artificial_bees_directory)
+    make_fake_bees(bees_directory, masks, bee_masks_directory, save_path = artificial_bees_directory)
 
 def artificial_hair_main():
     root = os.getcwd()
-    background_bees_directory = os.path.join(root, 'artificial_bees')
+    bees_directory = os.path.join(root, 'artificial_bees')
     bee_masks_directory = os.path.join(root, 'predicted_hair_masks')
     artificial_hair_directory = os.path.join(root, 'segmented_hair_final')
     masks = os.listdir(bee_masks_directory)
 
-    make_fake_bees(background_bees_directory, bee_masks_directory, masks, artificial_hair_directory)
+    make_fake_bees(bees_directory, masks, bee_masks_directory, save_path = artificial_hair_directory)

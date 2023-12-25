@@ -25,7 +25,9 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
         images_directory = os.path.join(root, 'removed_background_bees')
     else:
         images_directory = os.path.join(root, 'bee_original')
-    masks_directory = os.path.join(root, 'whole_bee_mask/')
+
+    results = os.path.join(root, 'analysis_results')
+    masks_directory = os.path.join(root, 'original_bee_masks/')
     images = os.listdir(images_directory)
     masks = os.listdir(masks_directory)
 
@@ -37,17 +39,19 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     val_count = len(images) - train_count - test_count
     train_images_filenames = images[:train_count]
     val_images_filenames = images[train_count:train_count + val_count]
-    test_images_filenames = images[train_count + val_count:]
+    # test_images_filenames = images[train_count + val_count:]
+    # If you are not training anything, test_images_filenames is the entire list of images
+    test_images_filenames = images
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = torch.load(root + 'models/New_Bee_Model').to(device)
+    model = torch.load(root + '/models/New_Bee_Model', map_location=device).to(device)
 
     params = {
         "device": device,
         "lr": 0.001,
         "batch_size": 2,
-        "num_workers": 4,
+        "num_workers": 0, # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
         "epochs": 10,
     }
 
@@ -56,7 +60,7 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
         "device": device,
         "lr": 0.001,
         "batch_size": 16,
-        "num_workers": 4,
+        "num_workers": 0, # Change this value if you are running this on a computer/computing cluster that is capable of parallel processing.
         "epochs": 10,
     }
 
@@ -75,9 +79,8 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience = 4)
 
     # Creates a Pytorch dataset of the test images.
-    test_dataset = BeeInferenceDataset(test_images_filenames, images_directory, masks_directory,
-                                       image_transform=image_transform, mask_transform = mask_transform)
-    test_loader = DataLoader(test_dataset, batch_size=test_params['batch_size'], shuffle=False, num_workers=params["num_workers"], pin_memory=True)
+    test_dataset = BeeInferenceDataset(test_images_filenames, images_directory, image_transform=image_transform)
+    test_loader = DataLoader(test_dataset, batch_size=test_params['batch_size'], shuffle=False, pin_memory=True)
     if to_train:
         # Creates Pytorch datasets of the training and validation images.
         # Currently these datasets are using no augmentations. adjust the augmentations by altering the masterlist variable in paths.py
@@ -97,14 +100,15 @@ def segment_bee_main(background_removed = False, to_train = False, seed = 0):
     # Resizes the 256 x 256 segmentations to their original size.
     predicted_masks = resize_predictions(predictions, test_dataset)
 
-    # Slightly different grids are displayed based on whether there exist ground truth masks.
+    # Slightly different grids are displayed based on whether there exist ground truth masks. Also accounts for if the entire test dataset is less than ten images.
+    idx = min(10, len(test_images_filenames)) # Set the min to 10 so the predicted masks displayed are not too crowded with the number of masks shown
     if len(masks) == 0:
-        display_bees(test_images_filenames[:10], images_directory, predicted_masks[:10])
+        display_bees(test_images_filenames[:idx], images_directory, predicted_masks[:idx], save = True)
     else:
-        display_image_grid(test_images_filenames[:10], images_directory, masks_directory, predicted_masks=predicted_masks[:10])
+        display_image_grid(test_images_filenames[:idx], images_directory, masks_directory, predicted_masks=predicted_masks[:idx], save = True)
 
     # If you want the accuracy metrics
-    prediction_accuracy_csv = os.path.join(root, 'bee_prediction_accuracies.csv')
+    prediction_accuracy_csv = os.path.join(results, 'bee_prediction_accuracies.csv')
 
     calculate_accuracy(predicted_masks, masks_directory = masks_directory, filenames = test_images_filenames,
                            csv_path = prediction_accuracy_csv)

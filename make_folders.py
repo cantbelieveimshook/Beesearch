@@ -14,6 +14,7 @@ Comment out the directories you do not want to make.
 
 def make_folders_main():
     directory_list = [
+        "analysis_results",
         "artificial_bees",
         "augmented_masks",
         "bee_crops",

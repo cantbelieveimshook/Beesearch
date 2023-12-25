@@ -39,6 +39,7 @@ The functions that make the augmented images are located in make_augment_functio
 '''
 
 root = os.getcwd()
+results = os.path.join(root, 'analysis_results')
 
 # Checks if each directory from the list of directories exists, and if not, creates the directory.
 def make_directories(directory_list):
@@ -55,29 +56,33 @@ Requires a folder or list of segmented masks to work. Does not include the pixel
 Set load = False if you are creating a new csv, and set load = True if you are adding more rows to an existing average_brightness csv.
 This function is very time-intensive, so it may be necessary to divide up your lists of images and masks and run the function several times, with load set to True.  
 '''
-def calculate_brightness(images, masks, images_directory, csv_path = root + 'average_brightness.csv',
-                         load_csv_path = root + 'average_brightness.csv', save = True, load = False):
+def calculate_brightness(images, masks, images_directory, csv_path = os.path.join(root, 'average_brightness.csv'),
+                         load_csv_path = os.path.join(root, 'average_brightness.csv'), save = True, load = False):
   if load:
     try:
       df = pd.read_csv(load_csv_path, index_col = False)
     except:
       raise IOError("The csv filename does not exist. Make sure the filename of an existing csv is given for load_csv_path.")
   else:
-    df = pd.DataFrame(columns = ["Filename", "Brightness Rating"])
+    df = pd.DataFrame(columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
+
   for i in range(len(images)):
-    means = []
     image_path = os.path.join(images_directory, images[i])
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     mask = masks[i]
-    for j in range(len(mask)):
-      for k in range(len(mask[j])):
-        if mask[j][k] != 0.0:
-          means.append(image[j][k].mean())
-    means = np.array(means).mean()
+    mask = np.expand_dims(mask, axis = 2)
 
-    row = [[images[i], means]]
-    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating"])
+    artificial_image = image * mask
+    non_black_pixels = (artificial_image.sum(axis = 2) > 0)
+    final_image = artificial_image[non_black_pixels]
+
+    mean = np.mean(final_image)
+    median = np.median(final_image)
+    sd = np.std(final_image)
+
+    row = [[images[i], mean, median, sd]]
+    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
     df = pd.concat([df, row], axis = 0, ignore_index = True)
 
   if save:
@@ -85,17 +90,19 @@ def calculate_brightness(images, masks, images_directory, csv_path = root + 'ave
 
   return df
 
+  return df
+
 
 # Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
 # from the original bee images, then saves these modified images in a new folder.
-def make_fake_bees(images_path, mask_names, masks_path, predicted_masks = None, save_path = root + "artificial_bees"):
+def make_fake_bees(images_path, mask_names, masks_path, predicted_masks = None, save_path = os.path.join(root, "artificial_bees")):
   if not os.path.isdir(save_path):
     os.mkdir(save_path)
 
   idx = 0
 
   for i in mask_names:
-    im = plt.imread(images_path + i)
+    im = plt.imread(os.path.join(images_path, i))
     if not masks_path:
       if not predicted_masks:
         raise TypeError("Either predicted_masks or masks_path must be not None.")
@@ -104,14 +111,16 @@ def make_fake_bees(images_path, mask_names, masks_path, predicted_masks = None, 
         mask = mask[:, :, np.newaxis]
         mask = np.concatenate([mask] * 3, axis=-1)
     else:
-      mask = plt.imread(masks_path + i)
+      mask = plt.imread(os.path.join(masks_path, i))
       mask = preprocess_mask(mask)
-    if np.shape(im) != np.shape(mask):
+      mask = mask[:, :, np.newaxis]
+    if im.shape[:2] != mask.shape[:2]:
+      print(np.shape(im), np.shape(mask))
       raise ShapeException("Images and masks are mismatched shapes: file " + i)
     fake_bee = im * mask
     fake_bee = fake_bee.astype('uint8')
     bee_reborn = cv2.cvtColor(fake_bee, cv2.COLOR_BGR2RGB)
-    cv2.imwrite(save_path + i, bee_reborn)
+    cv2.imwrite(os.path.join(save_path, i), bee_reborn)
 
     idx += 1
 
@@ -193,7 +202,7 @@ def train(model, batch_size, loss_fn, train_dataloader, val_dataloader, schedule
 
     scheduler.step(running_vloss)
 
-    avg_vloss = running_vloss / (i)
+    avg_vloss = running_vloss / (i + 1)
     print('LOSS train {} val {}'.format(avg_loss, avg_vloss))
 
     epoch_number += 1
@@ -266,7 +275,7 @@ This is a modified version of code originally written by Nicholas Alexander.
 Used to resize the predicted images back to their original sizes.
 If save = True, it also saves the predicted images to the designated save path.
 '''
-def resize_predictions(predictions, dataset, save=True, save_path=root + 'predicted_bee_masks/'):
+def resize_predictions(predictions, dataset, save=True, save_path=os.path.join(root, 'predicted_bee_masks/')):
   i = 0
   predicted_masks = []
   for predicted_256x256_mask, original_height, original_width in predictions:
@@ -275,9 +284,9 @@ def resize_predictions(predictions, dataset, save=True, save_path=root + 'predic
     predicted_masks.append(full_sized_mask)
     if save:
       name = dataset.getname(i)
-      save_name = save_path + name
-      if not os.path.isdir(save_name):
-        os.mkdir(save_name)
+      save_name = os.path.join(save_path, name)
+      if not os.path.isdir(save_path):
+        os.mkdir(save_path)
       cv2.imwrite(save_name, full_sized_mask * 255)
     i += 1
 
@@ -289,7 +298,7 @@ Takes a nested list of predicted crops and restitches them back into a full mask
 If save = True, it also saves the restitched predicted images to the designated save path.
 '''
 def restitch_predictions(predictions, test_dataset, save=True,
-                         save_path=root + 'predicted_hair_masks/'):
+                         save_path=os.path.join(root, 'predicted_hair_masks/')):
   restitched_images = []
   idx = 0
   for image in predictions:
@@ -309,12 +318,16 @@ def restitch_predictions(predictions, test_dataset, save=True,
         startw += cropw
       starth += croph
 
+    restitch = np.array(restitch)
+    restitch = restitch * 255
     restitched_images.append(restitch)
 
     if save:
       name = test_dataset.getname(idx)
-      save_name = save_path + name
-      cv2.imwrite(save_name, restitch * 255)
+      if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+      save_name = os.path.join(save_path, name)
+      cv2.imwrite(save_name, restitch)
 
     idx += 1
 
@@ -333,7 +346,7 @@ def display_image_grid(images_filenames, images_directory, masks_directory = Non
                        save = False, save_path = 'whole_bee_predictions', filetype='.png'):
   cols = 3 if masks_directory else 2
   rows = len(images_filenames)
-  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24))
+  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, int(rows * 2.4))) # Change these dimensions depending on your resolution needs (x and y values of each picture box size)
   for i, image_filename in enumerate(images_filenames):
     image = cv2.imread(os.path.join(images_directory, image_filename))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -377,7 +390,7 @@ def display_bees(images_filenames, images_directory, predicted_masks,
                  save = False, save_path = 'whole_bee_predictions', filetype = '.png'):
   cols = 2
   rows = len(images_filenames)
-  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24))
+  figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(10, 24)) # Change these dimensions depending on your resolution needs (x and y values of each picture box size)
   for i, image_filename in enumerate(images_filenames):
     image = cv2.imread(os.path.join(images_directory, image_filename))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -455,7 +468,7 @@ def accuracy(y_true, y_pred):
 
 # Calculates the accuracy, dice, and IoU values, then saves them to a csv file.
 def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
-  results = pd.DataFrame(columns=['Name', 'Accuracy', 'F1', 'IoU'])
+  samples = []
 
   for i, mask in enumerate(filenames):
     mask_orig = cv2.imread(os.path.join(masks_directory, mask))
@@ -468,8 +481,9 @@ def calculate_accuracy(predicted_masks, masks_directory, filenames, csv_path):
     f1 = dice(mask_orig, mask_pred)
 
     sample = {'Name': mask, 'Accuracy': acc, 'F1': f1, 'IoU': iou}
+    samples.append(pd.DataFrame(data=sample, index=[mask]))
 
-    results = pd.concat([results, pd.DataFrame(data=sample, index=[mask])])
+  results = pd.concat(samples)
   results.to_csv(csv_path, index = False)
 
 
@@ -733,7 +747,7 @@ def copy_images(start_path, destination_path):
 
   for i in start:
     if i not in end:
-      pth = start_path + i
+      pth = os.path.join(start_path, i)
       im = cv2.imread(pth)
       cv2.imwrite(i, im)
 
@@ -832,7 +846,7 @@ save all of those values to a csv file, and save the entropy analysis images to 
 '''
 def entropy_analysis_images(masked_image_path, entropy_output_path, csv_path = 'Entropy_Analysis_for_Bees.csv', save = True):
   for image_name in os.listdir(masked_image_path):
-    im = imread(masked_image_path + image_name)
+    im = imread(os.path.join(masked_image_path, image_name))
     # convert image to grayscale
     im_gray = rgb2gray(im)
     entropy_image = entropy(im_gray, disk(6))
@@ -861,7 +875,7 @@ image regression
 '''
 
 # Helper function to show a batch and check if images are successfully loaded
-def show_landmarks_batch(sample_batched, landmarks_batch):
+def show_landmarks_batch(sample_batched, landmarks_batch = None):
     """Show image with landmarks for a batch of samples."""
     images_batch = sample_batched['image']
     batch_size = len(images_batch)
@@ -872,12 +886,13 @@ def show_landmarks_batch(sample_batched, landmarks_batch):
     plt.imshow(grid.numpy().transpose((1, 2, 0)))
     print('rating:', [float(rating) for rating in sample_batched['rating'].numpy()])
     print('rating bin class', [float(class_label) for class_label in sample_batched['class'].numpy()])
-    for i in range(batch_size):
-        plt.scatter(landmarks_batch[i, :, 0].numpy() + i * im_size + (i + 1) * grid_border_size,
-                   landmarks_batch[i, :, 1].numpy() + grid_border_size,
-                    s=10, marker='.', c='r')
+    if landmarks_batch:
+      for i in range(batch_size):
+          plt.scatter(landmarks_batch[i, :, 0].numpy() + i * im_size + (i + 1) * grid_border_size,
+                     landmarks_batch[i, :, 1].numpy() + grid_border_size,
+                      s=10, marker='.', c='r')
 
-        plt.title('Batch from dataloader')
+          plt.title('Batch from dataloader')
 
 
 
@@ -980,6 +995,8 @@ def train_hairiness_model(model, device, dataloaders, rank_tensor, dataset_sizes
 
 
 def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
+  root = os.getcwd()
+  csv_path = os.path.join(root, 'analysis_results/surface_areas.csv')
   idx_tensor = [idx for idx in range(20)]
   idx_tensor = Variable(torch.FloatTensor(idx_tensor)).to(device)
   rank_list = []
@@ -987,8 +1004,7 @@ def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
     rank_list.append(rank_dict[i.item()])
   rank_tensor = Variable(torch.FloatTensor(rank_list)).to(device)
 
-  surface_area_df = pd.read_csv(
-    '/content/drive/MyDrive/Pilosity ML Project/2023Updated/Segmentation results/bee_surface_areas_no_new_images.csv')
+  surface_area_df = pd.read_csv(csv_path)
   imgname_df = surface_area_df['name']
   surface_area_df = surface_area_df['percentage of pixels']
 
@@ -1011,7 +1027,6 @@ def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
       expected_output = torch.sum(softmaxed_output * rank_tensor, 1)
       expected_output = expected_output[None]
       expected_output = torch.transpose(expected_output, 0, 1)
-      # print('Predicted rating w/o surface area: ', expected_output.item())
       whole_bee_dict['predicted_score'].append(expected_output.item() / float(surf_percent.strip('%')) * 100)
       print('Predicted_rating w/ surface area: ', expected_output.item() / float(surf_percent.strip('%')) * 100)
       print()

@@ -1,6 +1,6 @@
 # README
 
-### In order to run everything:
+### In order to run everything
 
 ```
 $python main.py
@@ -26,19 +26,14 @@ calculate_surface_area.py - calculates the "hairiness" of a bee by dividing the 
 
 calculate_brightness.py - calculates the "brightness" of a bee by taking the average of every bee pixel in an image and saving those values as brightness scores in a csv file
 
-entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. The use of entropy to analyze bee hair was done by _ in _.
+entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. [The use of entropy values to analyze bee hair](https://pubmed.ncbi.nlm.nih.gov/28028464/) was done by Stavert et. in 2016.
 
-hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50] (https://arxiv.org/abs/1512.03385) model.
+hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50](https://arxiv.org/abs/1512.03385) model.
 
-image_regression.py - predicts entropy values of a bee, both with and without dividing by the surface area. It then plots the correlation between the entropy ratings and the hairiness scores.
+image_regression.py - contains three functions. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
+The second and third functions (predicted_rating_entropy_values(), predicted_rating_entropy_surface_area()) predict entropy values of a bee, with and without dividing by the surface area, respectively. They then plot the correlation between the entropy ratings and the hairiness scores.
 
 ### Other scripts and what they do
-classes.py - contains the Python classes used by the other scripts
-
-functions.py - contains most of the functions used by the other scripts
-
-paths.py - contains file paths used by the other scripts
-
 make_folders.py - creates the necessary directories if they do not already exist
 
 make_augment_functions.py - contains the functions used to create augmented images and masks
@@ -48,6 +43,12 @@ make_augmentations.py - creates augmented images and masks
 bee_crops.py - divides images into crops, then saves these crops into another folder. Use if you want to create cropped hair masks from the images.
 
 remove_background.py - artificially removes the backgrounds from bee images and saves those images into a separate folder. Use if you believe black backgrounds will improve segmentation over the original backgrounds.
+
+classes.py - contains the Python classes used by the other scripts
+
+functions.py - contains most of the functions used by the other scripts
+
+paths.py - contains file paths used by the other scripts
 
 ### How to upload images:
 
