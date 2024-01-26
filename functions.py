@@ -90,8 +90,6 @@ def calculate_brightness(images, masks, images_directory, csv_path = os.path.joi
 
   return df
 
-  return df
-
 
 # Uses the predicted bee masks to artificially remove the eyes, wings, and antennae
 # from the original bee images, then saves these modified images in a new folder.
