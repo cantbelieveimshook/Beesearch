@@ -413,7 +413,7 @@ def display_bees(images_filenames, images_directory, predicted_masks,
 
 
 '''
-Required a set of predicted bee and predicted hair masks for a set of images. Counts the number of predicted bee pixels and 
+Requires a set of predicted bee and predicted hair masks for a set of images. Counts the number of predicted bee pixels and 
 predicted hair pixels, then takes the ratio of those pixel counts and saves the bee pixel counts of each image into a csv.
 dataset is just used to get the filename of the image. Either the bee or hair dataset should work, assuming they are using 
 the same base images.
