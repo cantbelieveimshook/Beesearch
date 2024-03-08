@@ -30,7 +30,7 @@ def calculate_brightness_main():
     results = os.path.join(root, 'analysis_results')
     bee_images_directory = os.path.join(root, 'bee_original/')
     images = os.listdir(bee_images_directory)
-    model = torch.load(root + '/models/Whole_bee_model', map_location = device).to(device)
+    model = torch.load(root + '/models/New_Bee_Model', map_location = device).to(device)
     params = {
         "device": device,
         "batch_size": 16,

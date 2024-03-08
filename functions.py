@@ -64,7 +64,7 @@ def calculate_brightness(images, masks, images_directory, csv_path = os.path.joi
     except:
       raise IOError("The csv filename does not exist. Make sure the filename of an existing csv is given for load_csv_path.")
   else:
-    df = pd.DataFrame(columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
+    df = pd.DataFrame(columns = ["Filename", "Brightness Mean", "Brightness Median", "Brightness Standard Deviation"])
 
   for i in range(len(images)):
     image_path = os.path.join(images_directory, images[i])
@@ -82,7 +82,7 @@ def calculate_brightness(images, masks, images_directory, csv_path = os.path.joi
     sd = np.std(final_image)
 
     row = [[images[i], mean, median, sd]]
-    row = pd.DataFrame(row, columns = ["Filename", "Brightness Rating", "Brightness Median", "Brightness Standard Deviation"])
+    row = pd.DataFrame(row, columns = ["Filename", "Brightness Mean", "Brightness Median", "Brightness Standard Deviation"])
     df = pd.concat([df, row], axis = 0, ignore_index = True)
 
   if save:
