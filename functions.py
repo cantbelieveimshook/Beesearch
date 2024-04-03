@@ -903,7 +903,7 @@ def train_hairiness_model(model, device, dataloaders, rank_tensor, dataset_sizes
   best_acc = 0.0
   best_mse = 10000
   result_dict = defaultdict(list)
-  softmax = nn.Softmax().to(device)
+  softmax = nn.Softmax(dim = -1).to(device)
 
   for epoch in range(num_epochs):
     print(f'Epoch {epoch}/{num_epochs - 1}')
@@ -917,7 +917,6 @@ def train_hairiness_model(model, device, dataloaders, rank_tensor, dataset_sizes
       else:
         model.eval()  # Set model to evaluate mode
       running_loss = 0.0
-      epoch_CE_loss = 0.0
       running_corrects = 0
       running_rmse_loss = 0.0
       # Iterate over data.
@@ -1007,7 +1006,7 @@ def hairiness_rating(root_dir, model, device, rank_dict, data_transform):
   surface_area_df = surface_area_df['percentage of pixels']
 
   whole_bee_dict = defaultdict(list)
-  softmax = nn.Softmax().to(device)
+  softmax = nn.Softmax(dim = -1).to(device)
 
   with torch.no_grad():
     for imgname, surf_percent in zip(imgname_df, surface_area_df):

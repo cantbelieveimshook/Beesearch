@@ -206,12 +206,6 @@ Date: July 5, 2023
 '''
 
 class HairnessRatingDataset(Dataset):
-  def __init__(self, images_filenames, images_directory, masks_directory, transform=None):
-    self.images_filenames = images_filenames
-    self.images_directory = images_directory
-    self.masks_directory = masks_directory
-    self.transform = transform
-
   def __init__(self, csv_file, root_dir, transform=None):
     # Arguments:
     #     csv_file (string): Path to the csv file with annotations.

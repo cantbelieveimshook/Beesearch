@@ -102,7 +102,7 @@ def image_regression(csv_file, root_dir, model_save_path):
     val_len = len(rating_dataset) - train_len
     train_set, val_set = torch.utils.data.random_split(rating_dataset, [train_len, val_len])
     # print('training set length:', len(train_set))
-    # print('validataion set length:', len(val_set))
+    # print('validation set length:', len(val_set))
 
     # Load the data
     train_dataloader = DataLoader(train_set,
@@ -159,7 +159,7 @@ def image_regression(csv_file, root_dir, model_save_path):
     resnet152 = ResNet(resnet152_config, OUTPUT_DIM)
 
     # define the model
-    model = ResNet(resnet50_config, OUTPUT_DIM)
+    model = resnet50
 
     pretrained_model = models.resnet50(pretrained=True)
 
@@ -464,7 +464,7 @@ def predicted_rating_entropy_surface_area(csv_file, model_save_path, root_dir, c
             whole_bee_dict['predicted_score'].append(np.mean(crop_dict['predicted_score']))
 
             print('Predicted rating w/o surface area: ', np.mean(crop_dict['predicted_score']))
-            print('Predocted_rating w/ surface area: ',
+            print('Predicted_rating w/ surface area: ',
                   np.mean(crop_dict['predicted_score']) / float(surf_percent.strip('%')) * 100)
 
             # convert image to grayscale
