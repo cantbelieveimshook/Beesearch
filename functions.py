@@ -598,7 +598,7 @@ def pick_random_crops(folder_path, destination_folder, size=250, clear=False):
     if not os.path.isfile(destination_folder + '/' + img_name):
       image = cv2.imread(img_name)
       cv2.imwrite(os.path.join(destination_folder, folder[i]), image)
-  print('done')
+  print("Random crop selection is complete")
 
 
 '''
@@ -672,6 +672,7 @@ Example:
 image_transform = A.Compose(
         [A.Resize(256, 256), A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), ToTensorV2()]
         )
+The mean and std values used in A.Normalize above are determined by the following function.
 '''
 def find_normalization(directory, images):
   idx = 0
@@ -695,6 +696,32 @@ def find_normalization(directory, images):
   std_rgb = np.mean(stds, axis=0)
 
   return mu_rgb, std_rgb
+
+'''
+Based off of code from: https://stackoverflow.com/questions/32609098/how-to-fast-change-image-brightness-with-python-opencv
+An optional function that can be used to standardize dark background images to all have "true" black backgrounds.
+Use only if attempting to correct minor lighting differences among images that should otherwise have the same background color.
+'''
+def adjust_background(images, original_directory, adjusted_directory, pixel_range_x = 10, pixel_range_y = 10):
+  if not os.path.exists(adjusted_directory):
+    os.makedirs(adjusted_directory)
+
+  for img in images:
+    image = cv2.imread(os.path.join(original_directory, img))
+    shape = image.shape
+    x = int(shape[0] * 0.02)
+    y = int(shape[1] * 0.02)
+    pixel = image[x, y, :]
+    value = pixel[0]
+
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    v[v < value] = 0
+    v[v >= value] -= value
+
+    final_hsv = cv2.merge((h, s, v))
+    new_image = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+    cv2.imwrite(os.path.join(adjusted_directory, 'adjusted_' + img), new_image)
 
 
 '''
