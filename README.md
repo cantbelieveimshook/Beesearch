@@ -16,70 +16,54 @@ To run all segmentation and analysis code:
 $python main.py
 ```
 **segment_bee.py**: Used to segment the focal body region (bee body segmented from background, specimen pin, eyes, wings, antennae, stinger, tongue). This same script can be used for additional model training on labeled datasets (images and corresponding masks), if desired.
+
 **segment_hair.py**: Used to segment hair from non-hair. Uses artificial bees as input (see below). This same script can be used for additional model training, if desired.
+
 **artificial_bees.py**: Used to create images of the resulting segments from the segmentation tasks above. These segments are known as "artifical bees" and "artificial hair,"
 
-make_folders.py - creates the necessary directories if they do not already exist
+**make_folders.py**: Creates the necessary directories if they do not already exist.
 
+**classes.py**: Contains the Python classes used by the other scripts.
 
+**functions.py**: Contains most of the functions used by the other scripts.
 
-
-classes.py - contains the Python classes used by the other scripts
-
-functions.py - contains most of the functions used by the other scripts
-
-paths.py - contains file paths used by the other scripts
+**paths.py**: Contains file paths used by the other scripts.
 
 ## Trait Quantification
 Scripts to quantify bee pilosity and lightness from the image segments created above.
 
+**calculate_surface_area.py**: Calculates hair coverage for each image by dividing the number of predicted hair pixels by the number of predicted bee pixels.
 
+**calculate_brightness.py**: Calculates lightness as the median pixel-wise lightness in the focal body region segment. 
 
 ## Model Training
 Additional scripts useful for further model training.
 
 **bee_crops.py**: Divides images into smaller cropped images. This is useful when creating hair masks, because manually masking hair from whole images is very labor intensive. 
+
 **make_augment_functions.py**: Contains the functions used to create augmented images and masks. Can be used to expand training datasets.
+
 **make_augmentations.py**: Creates augmented images and masks.
 
 
 ## Miscellaneous Scripts and Files
-Additional resources not featured in the main publication.
+Additional resources under development, not featured in the main publication.
 
-**remove_background.py** - artificially removes the backgrounds from bee images and saves those images into a separate folder. Use if you believe black backgrounds will improve segmentation over the original backgrounds.
+**remove_background.py**: Removes the backgrounds from bee images and saves those images into a separate folder. 
 
-
-### Model training and segmentation
-In order to artificially isolate the hair in images of bees, it is necessary to use machine learning models to first create segmentations of bees with the eyes, wings, antennae, and tongues removed, before creating segmentations of just the bee hair.
-
-The script to create the first set of segmentations is located in segment_bee.py.
-
-The script to create the second set of segmentations is located in segment_hair.py.
-
-The script to create both the artificial bees and the artificial hair is located in artificial_bees.py
-
-When you run these scripts, there is also the option to train them on labeled datasets. This requires the existence of images and corresponding masks. Training the models may further improve performance, but is not necessary.
-
-### Image analysis on hair
-We have developed several ways to analyze bee hair and hairiness using several different scripts. 
-
-calculate_surface_area.py - calculates the "hairiness" of a bee by dividing the number of predicted hair pixels by the number of predicted bee pixels and saving the results in a csv file
-
-calculate_brightness.py - calculates the "brightness" of a bee by taking the average of every bee pixel in an image and saving those values as brightness scores in a csv file
-
-entropy_analysis.py - performs entropy analysis on images in a folder by displaying an entropy map of each image, then saving the entropy maps in a new directory. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. [The use of entropy values to analyze bee hair](https://pubmed.ncbi.nlm.nih.gov/28028464/) was done by Stavert et. in 2016.
+**entropy_analysis.py**: Calculates the pixel-wise entropy of each image. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. [The use of entropy values to analyze bee hair](https://pubmed.ncbi.nlm.nih.gov/28028464/) was done by Stavert et. in 2016.
 
 hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50](https://arxiv.org/abs/1512.03385) model.
 
 image_regression.py - contains three functions. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
-The second and third functions (predicted_rating_entropy_values(), predicted_rating_entropy_surface_area()) predict entropy values of a bee, with and without dividing by the surface area, respectively. They then plot the correlation between the entropy ratings and the hairiness scores.
+
 
 ### Other scripts and what they do
 
 
 ### How to upload images:
 
-There are many differnt image folders with a wide variety of purposes. You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
+There are many different image folders with a wide variety of purposes. You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
 
 The following is an explanation for every folder name and what they should be used for:
 root: The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
