@@ -53,38 +53,31 @@ Additional resources under development, not featured in the main publication.
 
 **entropy_analysis.py**: Calculates the pixel-wise entropy of each image. In the context of information theory, entropy is the expected amount of information or uncertainty present in a variable. [The use of entropy values to analyze bee hair](https://pubmed.ncbi.nlm.nih.gov/28028464/) was done by Stavert et. in 2016.
 
-hairiness_score.py - classifies the hairiness of a bee from a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50](https://arxiv.org/abs/1512.03385) model.
+**hairiness_score.py**: Generates a pilosity score a scale of 0 to 5, with 5 being the hairiest and 0 being the last hairy. This classification is done using a [ResNet50](https://arxiv.org/abs/1512.03385) model.
 
-image_regression.py - contains three functions. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
-
-
-### Other scripts and what they do
+**image_regression.py** Contains three functions for scoring pilosity. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
 
 
-### How to upload images:
+### Description of Directories
+You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
 
-There are many different image folders with a wide variety of purposes. You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
+**root:** The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
 
-The following is an explanation for every folder name and what they should be used for:
-root: The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
-
-**bee_images_directory**
+**bee_images_directory**: This is the file path for the original full bee images. Use this folder to store the images of bees you wish to analyze.
 
 path: root + 'bee_original/'
-
-This is the file path for the original full bee images. Use this folder to store the images of bees you wish to analyze.
 
 **original_bee_masks_directory**
 
 path: root + 'original_bee_masks/'
 
-If you have manually created bee masks you would like to use, upload them to this folder. This folder is not for storing predicted bee masks created by machine learning models.
+If you have manually created bee masks you would like to use for additional training, upload them to this folder. This folder is not for storing predicted bee masks created by machine learning models.
 
 **bee_masks_directory**
 
 path = root + 'predicted_bee_masks/'
 
-This is the file path for the predicted bee masks, which are segmented by a machine learning model. If you run a script to segment out the eyes, wings, and antennae from bee images, the resulting masks will automatically be saved here, unless you set save = False in resize_predictions.
+This is the file path for the predicted bee masks, which are segmented by the machine learning model. If you run a script to segment out the eyes, wings, and antennae from bee images, the resulting masks will automatically be saved here, unless you set save = False in resize_predictions.
 
 **artificial_bees_directory**
 
