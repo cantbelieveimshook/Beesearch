@@ -14,7 +14,7 @@ Note: paths.py also has a root variable, which stores the path to the scripts fo
 
 ### Scripts
 
-path: root + 'scripts/
+path: root + 'scripts/'
 
 This folder contains all of our scripts, including main.py. We have informally divided them further into a few different categories.
 
