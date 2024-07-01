@@ -43,8 +43,9 @@ results = os.path.join(root, 'analysis_results')
 
 # Checks if each directory from the list of directories exists, and if not, creates the directory.
 def make_directories(directory_list):
+  parent = os.path.abspath(os.path.join(root, os.pardir)) # gets the parent directory
   for i in directory_list:
-    path = os.path.join(root, i)
+    path = os.path.join(parent, i)
     if not os.path.isdir(path):
       os.mkdir(path)
       print("Created new directory at: ", path)
