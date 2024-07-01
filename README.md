@@ -34,14 +34,14 @@ python main.py
 
 **paths.py**: Contains file paths used by the other scripts.
 
-## Category: Trait Quantification
+### Category: Trait Quantification
 Scripts to quantify bee pilosity and lightness from the image segments created above.
 
 **calculate_surface_area.py**: Calculates hair coverage for each image by dividing the number of predicted hair pixels by the number of predicted bee pixels.
 
 **calculate_brightness.py**: Calculates lightness as the median pixel-wise lightness in the focal body region segment. 
 
-## Category: Model Training
+### Category: Model Training
 Additional scripts useful for further model training.
 
 **bee_crops.py**: Divides images into smaller cropped images. This is useful when creating hair masks, because manually masking hair from whole images is very labor intensive. 
@@ -51,7 +51,7 @@ Additional scripts useful for further model training.
 **make_augmentations.py**: Creates augmented images and masks.
 
 
-## Category: Miscellaneous Scripts and Files
+### Category: Miscellaneous Scripts and Files
 Additional resources under development, not featured in the main publication.
 
 **remove_background.py**: Removes the backgrounds from bee images and saves those images into a separate folder. 
@@ -63,7 +63,7 @@ Additional resources under development, not featured in the main publication.
 **image_regression.py** Contains three functions for scoring pilosity. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
 
 
-### Other Directories
+## Other Directories
 You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
 
 **root:** The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
