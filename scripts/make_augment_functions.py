@@ -10,7 +10,11 @@ import numpy as np
 from paths import *
 
 # This is used to ensure that the image and mask directories exist. It also includes the code for clearing the folders.
-def housekeeping(new_image_directory, new_mask_directory, clear):
+def housekeeping(new_image_dir, new_mask_dir, clear):
+    parent = os.path.abspath(os.path.join(root, os.pardir))
+    new_image_directory = os.path.join(parent, new_image_dir)
+    new_mask_directory = os.path.join(parent, new_mask_dir)
+
     if not os.path.exists(new_image_directory):
         os.makedirs(new_image_directory)
     if not os.path.exists(new_mask_directory):
@@ -270,9 +274,9 @@ def brightness(low, high, image_names=original_bee_masks, images_directory=bee_i
 
             value = random.uniform(low, high)
             hsv_img = hsv_convert(image, value)
-            hsv_mask = hsv_convert(mask, value)
+            # hsv_mask = hsv_convert(mask, value)
             new_img = cv2.cvtColor(hsv_img, cv2.COLOR_HSV2BGR)
-            new_mask = cv2.cvtColor(hsv_mask, cv2.COLOR_HSV2BGR)
+            # new_mask = cv2.cvtColor(hsv_mask, cv2.COLOR_HSV2BGR)
             cv2.imwrite(os.path.join(new_image_directory, path), new_img)
             cv2.imwrite(os.path.join(new_mask_directory, path), mask)
     else:
