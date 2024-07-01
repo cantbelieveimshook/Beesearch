@@ -28,6 +28,8 @@ def housekeeping(new_image_dir, new_mask_dir, clear):
         for f in files_mask:
             os.remove(os.path.join(new_mask_directory, f))
 
+    return new_image_directory, new_mask_directory
+
 '''
 The following functions have been modified from a source.
 The original functions are written by the authors of this paper:
@@ -36,10 +38,9 @@ https://escholarship.org/uc/item/0h07635j
 
 # Creates a set of images that have been flipped vertically.
 def create_flip_set(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-                    new_image_directory=aug_im_dir + 'flipped/', new_mask_directory=aug_mask_dir + 'flipped/',
-                    flag = True, clear=False):
+                    new_image_dir=aug_im_dir + 'flipped/', new_mask_dir=aug_mask_dir + 'flipped/', flag = True, clear=False):
 
-    housekeeping(new_image_directory, new_mask_directory, clear)
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for image in image_names:
@@ -58,9 +59,8 @@ def create_flip_set(image_names=original_bee_masks, images_directory=bee_images_
 
 # Creates a set of images rotated 90, 180, and 270 degrees.
 def create_rotated_set(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-                       new_image_directory=aug_im_dir + 'rotated/', new_mask_directory=aug_mask_dir + 'rotated/',
-                       flag = True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+                       new_image_dir=aug_im_dir + 'rotated/', new_mask_dir=aug_mask_dir + 'rotated/', flag = True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     rotations = [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
 
@@ -83,9 +83,8 @@ def create_rotated_set(image_names=original_bee_masks, images_directory=bee_imag
 
 # Creates a set of images that have been inverted on the RGB color scale.
 def invert_images(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-                  new_image_directory=aug_im_dir + 'inverted/', new_mask_directory=aug_mask_dir + 'inverted/',
-                  flag = True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+                  new_image_dir=aug_im_dir + 'inverted/', new_mask_dir=aug_mask_dir + 'inverted/', flag = True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for image_name in image_names:
@@ -101,9 +100,8 @@ def invert_images(image_names=original_bee_masks, images_directory=bee_images_di
 
 # Creates a set of images that have had some amount of Gaussian blur added.
 def blur_image(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-               new_image_directory=aug_im_dir + 'blurred/', new_mask_directory=aug_mask_dir + 'blurred/',
-               flag = True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+               new_image_dir=aug_im_dir + 'blurred/', new_mask_dir=aug_mask_dir + 'blurred/', flag = True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for image_name in image_names:
@@ -122,9 +120,8 @@ def blur_image(image_names=original_bee_masks, images_directory=bee_images_direc
 
 # Creates a set of images with some random noise added.
 def add_noise(image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-              new_image_directory=aug_im_dir + 'noisy/', new_mask_directory=aug_mask_dir + 'noisy/',
-              flag=True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+              new_image_dir=aug_im_dir + 'noisy/', new_mask_dir=aug_mask_dir + 'noisy/', flag=True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for image_name in image_names:
@@ -152,9 +149,8 @@ def fill(img, h, w):
 
 # Creates a set of images that are horizontally shifted.
 def horizontal_shift(ratio, image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-                     new_image_directory=aug_im_dir + 'horizontal_shifts/',
-                     new_mask_directory=aug_mask_dir + 'horizontal_shifts/', flag=True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+                     new_image_dir=aug_im_dir + 'horizontal_shifts/', new_mask_dir=aug_mask_dir + 'horizontal_shifts/', flag=True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for path in image_names:
@@ -185,9 +181,8 @@ def horizontal_shift(ratio, image_names=original_bee_masks, images_directory=bee
 
 # Creates a set of images that are vertically shifted.
 def vertical_shift(ratio, image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-                   new_image_directory=aug_im_dir + 'vertical_shifts/',
-                   new_mask_directory=aug_mask_dir + 'vertical_shifts/', flag=True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+                   new_image_dir=aug_im_dir + 'vertical_shifts/', new_mask_dir=aug_mask_dir + 'vertical_shifts/', flag=True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for path in image_names:
@@ -218,9 +213,8 @@ def vertical_shift(ratio, image_names=original_bee_masks, images_directory=bee_i
 
 # Creates a set of images that are zoomed in by a certain value.
 def zoom(value, image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-         new_image_directory=aug_im_dir + 'zoom/', new_mask_directory=aug_mask_dir + 'zoom/', flag=True,
-         clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+         new_image_dir=aug_im_dir + 'zoom/', new_mask_dir=aug_mask_dir + 'zoom/', flag=True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for path in image_names:
@@ -261,9 +255,8 @@ def hsv_convert(image, value):
 
 # Creates a set of images that are brightened by a certain value.
 def brightness(low, high, image_names=original_bee_masks, images_directory=bee_images_directory, masks_directory=original_bee_masks_directory,
-               new_image_directory=aug_im_dir + 'brightness/',
-               new_mask_directory=aug_mask_dir + 'brightness/', flag=True, clear=False):
-    housekeeping(new_image_directory, new_mask_directory, clear)
+               new_image_dir=aug_im_dir + 'brightness/', new_mask_dir=aug_mask_dir + 'brightness/', flag=True, clear=False):
+    new_image_directory, new_mask_directory = housekeeping(new_image_dir, new_mask_dir, clear)
 
     if flag:
         for path in image_names:
