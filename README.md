@@ -9,11 +9,16 @@ More information on the project can be found in the related publication, Compute
 
 ## Repository Contents
 
-### Image Segmentation
+### Scripts
 
-To run all segmentation and analysis code:
+This folder contains all of our scripts, including main.py. We have informally divided them further into a few different categories.
+
+### Category: Image Segmentation
+
+To run all segmentation and analysis code, first ensure the current working directory is the location of this folder. Then, run the following:
 ```
-$python main.py
+cd scripts
+python main.py
 ```
 **segment_bee.py**: Used to segment the focal body region (bee body segmented from background, specimen pin, eyes, wings, antennae, stinger, tongue). This same script can be used for additional model training on labeled datasets (images and corresponding masks), if desired.
 
@@ -29,14 +34,14 @@ $python main.py
 
 **paths.py**: Contains file paths used by the other scripts.
 
-## Trait Quantification
+## Category: Trait Quantification
 Scripts to quantify bee pilosity and lightness from the image segments created above.
 
 **calculate_surface_area.py**: Calculates hair coverage for each image by dividing the number of predicted hair pixels by the number of predicted bee pixels.
 
 **calculate_brightness.py**: Calculates lightness as the median pixel-wise lightness in the focal body region segment. 
 
-## Model Training
+## Category: Model Training
 Additional scripts useful for further model training.
 
 **bee_crops.py**: Divides images into smaller cropped images. This is useful when creating hair masks, because manually masking hair from whole images is very labor intensive. 
@@ -46,7 +51,7 @@ Additional scripts useful for further model training.
 **make_augmentations.py**: Creates augmented images and masks.
 
 
-## Miscellaneous Scripts and Files
+## Category: Miscellaneous Scripts and Files
 Additional resources under development, not featured in the main publication.
 
 **remove_background.py**: Removes the backgrounds from bee images and saves those images into a separate folder. 
@@ -58,10 +63,12 @@ Additional resources under development, not featured in the main publication.
 **image_regression.py** Contains three functions for scoring pilosity. The first function, named image_regression(), trains a ResNet model to classify images of bees with a level of hairiness from 0 to 5. It is very important to note that you should not run this function unless you have a csv file that contains ground truth hairiness ratings of the bee images you are attempting to give hairiness scores to.
 
 
-### Description of Directories
+### Other Directories
 You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
 
 **root:** The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
+
+Note: paths.py also has a root variable, which stores the path to the scripts folder. That root variable is only used by the files in the scripts folder.
 
 **bee_images_directory**: This is the file path for the original full bee images. Use this folder to store the images of bees you wish to analyze.
 
