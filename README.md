@@ -8,8 +8,13 @@ More information on the project can be found in the related publication, Compute
 ![model pipeline](misc_scripts_and_files/pilosity_pipeline.jpg)
 
 ## Repository Contents
+**root:** The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
+
+Note: paths.py also has a root variable, which stores the path to the scripts folder. That root variable is only used by the files in the scripts folder.
 
 ### Scripts
+
+path: root + 'scripts/
 
 This folder contains all of our scripts, including main.py. We have informally divided them further into a few different categories.
 
@@ -65,10 +70,6 @@ Additional resources under development, not featured in the main publication.
 
 ## Other Directories
 You can either run make_folders.py or manually create the necessary folders based on your needs. If you wish to change any of the filenames, the filenames of each folder can either be manually changed or changed in paths.py before the folders are created.
-
-**root:** The path of the directory where everything is located. Called by getting os.cwd(). For organization purposes, every subfolder and script should be located in the root folder. All other folders will be named assuming they are located in the root folder.
-
-Note: paths.py also has a root variable, which stores the path to the scripts folder. That root variable is only used by the files in the scripts folder.
 
 **bee_images_directory**: This is the file path for the original full bee images. Use this folder to store the images of bees you wish to analyze.
 
